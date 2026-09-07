@@ -1,43 +1,54 @@
-# Astro Starter Kit: Minimal
+# BikeLog
 
-```sh
-pnpm create astro@latest -- --template minimal
+Mobile-first web app for Indian bikers to track mileage, fuel, servicing, and repairs.
+
+## Features
+
+- **Dashboard** — Total km, average mileage (km/l), monthly spend, recent activity
+- **Fuel Log** — Track fill-ups, auto-calc mileage and costs in ₹
+- **Service Log** — Record scheduled maintenance, repairs, and costs
+- **Issues & Repairs** — Log problems with severity/status tracking
+- **Bike Profiles** — Manage multiple bikes, switch active bike
+- **Dark mode** — Starwind UI theme toggle
+- **Data export/import** — JSON backup and restore
+- **Indian-focused** — INR formatting, km units, local bike brands, common service items
+
+## Tech Stack
+
+- [Astro](https://astro.build) — framework
+- [Starwind UI](https://starwind.dev) — accessible Tailwind components
+- [Tailwind CSS v4](https://tailwindcss.com) — styling
+- [Cloudflare Pages](https://pages.cloudflare.com) — deployment (SSR adapter)
+- pnpm — package manager
+- localStorage — data persistence (per-device)
+
+## Development
+
+```bash
+pnpm install
+pnpm dev        # http://localhost:4321
+pnpm build      # build for production
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Deploy to Cloudflare Pages
 
-## 🚀 Project Structure
+1. Push to GitHub
+2. Cloudflare Pages → Create project → connect repo
+3. Build command: `pnpm build`
+4. Output directory: `dist`
 
-Inside of your Astro project, you'll see the following folders and files:
+## Project Structure
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```
+src/
+├── components/starwind/   # Starwind UI components
+├── layouts/BaseLayout.astro
+├── pages/                 # Dashboard, Fuel, Service, Issues, Bikes, Settings
+├── lib/                   # types, store, mileage, utils
+└── styles/starwind.css
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Data Storage
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+All data is stored in `localStorage` under `bikelog_*` keys. No backend required.
+Use Settings → Export to back up your data as JSON.
