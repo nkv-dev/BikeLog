@@ -17,6 +17,7 @@ pnpm-debug.log*
 .env
 .env.production
 .env.local
+.dev.vars
 
 # never commit GitHub App secrets / private keys
 *.pem
