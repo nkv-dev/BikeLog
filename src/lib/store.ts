@@ -128,6 +128,21 @@ export function exportAllData(): string {
   return JSON.stringify(data, null, 2);
 }
 
+/** Replace every data collection in localStorage (used after pulling from GitHub). */
+export function hydrateAll(data: {
+  bikes?: Bike[];
+  fuel?: FuelEntry[];
+  service?: ServiceEntry[];
+  issues?: IssueEntry[];
+  settings?: Partial<AppSettings>;
+}): void {
+  if (data.bikes) setAll(KEYS.BIKES, data.bikes);
+  if (data.fuel) setAll(KEYS.FUEL, data.fuel);
+  if (data.service) setAll(KEYS.SERVICE, data.service);
+  if (data.issues) setAll(KEYS.ISSUES, data.issues);
+  if (data.settings) settingsStore.update(data.settings);
+}
+
 export function importAllData(jsonStr: string): boolean {
   try {
     const data = JSON.parse(jsonStr);

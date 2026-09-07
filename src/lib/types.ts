@@ -7,6 +7,7 @@ export interface Bike {
   odometer: number;
   fuelType: "petrol" | "diesel";
   createdAt: string;
+  photos?: string[]; // relative paths under bikelog/assets/<slug>/
 }
 
 export interface FuelEntry {
