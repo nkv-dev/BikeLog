@@ -1,5 +1,7 @@
 ---
 import { ThemeToggle } from "@/components/starwind/theme-toggle";
+import { ThemeInitScript } from "@starwind-ui/astro/theme";
+import "@/styles/starwind.css";
 
 interface Props {
   title: string;
@@ -31,10 +33,25 @@ const icons: Record<string, string> = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#18181b" />
+    <script is:inline>
+      (function () {
+        var meta = document.querySelector('meta[name="theme-color"]');
+        var apply = function () {
+          if (!meta) return;
+          var dark = document.documentElement.classList.contains("dark");
+          meta.setAttribute("content", dark ? "#18181b" : "#ffffff");
+        };
+        apply();
+        var observer = new MutationObserver(apply);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+        window.addEventListener("astro:after-swap", apply);
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="Track your bike's mileage, fuel, servicing and repairs" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <ThemeInitScript />
     <title>{title} | BikeLog</title>
     <style>
       html, body {
