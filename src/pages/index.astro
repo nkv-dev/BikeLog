@@ -6,7 +6,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
   <div id="app" class="mx-auto max-w-lg px-4 py-4">
     <div id="no-bike-state" class="flex flex-col items-center justify-center py-20 text-center">
       <div class="mb-4 rounded-full bg-muted p-4">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground" aria-hidden="true">
           <circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3.5-3.5 2-3 2 3h3"/>
         </svg>
       </div>
@@ -34,7 +34,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
           <p class="text-[10px] text-muted-foreground">km/l</p>
         </div>
         <div class="rounded-xl border border-border bg-card p-4">
-          <p class="text-xs font-medium text-muted-foreground">This Month</p>
+          <p class="text-xs font-medium text-muted-foreground">Fuel Spend (Month)</p>
           <p id="stat-monthly-spend" class="mt-1 text-2xl font-bold">₹0</p>
         </div>
         <div class="rounded-xl border border-border bg-card p-4">
@@ -45,7 +45,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
       <div class="rounded-xl border border-border bg-card p-4">
         <h3 class="mb-3 text-sm font-semibold">Recent Activity</h3>
-        <div id="recent-activity" class="space-y-3">
+        <div id="recent-activity" class="space-y-3" aria-live="polite">
           <p class="text-sm text-muted-foreground">No entries yet. Start logging fuel or services.</p>
         </div>
       </div>
@@ -118,7 +118,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       const monthlySpendEl = document.getElementById("stat-monthly-spend");
       const fuelCountEl = document.getElementById("stat-fuel-count");
 
-      if (totalKmEl) totalKmEl.textContent = totalKm.toLocaleString("en-IN") + " km";
+      if (totalKmEl) totalKmEl.textContent = fuelEntries.length >= 2 ? totalKm.toLocaleString("en-IN") + " km" : "--";
       if (avgMileageEl) avgMileageEl.textContent = avgMileage ? avgMileage.toFixed(1) : "--";
       if (monthlySpendEl) monthlySpendEl.textContent = formatINR(monthlySpend);
       if (fuelCountEl) fuelCountEl.textContent = fuelEntries.length.toString();
@@ -134,7 +134,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
           .slice(0, 5);
 
         if (allEntries.length === 0) {
-          recentEl.innerHTML = `<p class="text-sm text-muted-foreground">No entries yet. Start logging fuel or services.</p>`;
+          recentEl.innerHTML = `<p class="text-sm text-muted-foreground">No entries yet. <a href="/fuel" class="text-primary hover:underline">Log fuel</a> or <a href="/service" class="text-primary hover:underline">log a service</a> to get started.</p>`;
         } else {
           recentEl.innerHTML = allEntries
             .map((e) => {
@@ -151,6 +151,11 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
             .join("");
         }
       }
+    }
+
+    const switchBtn = document.getElementById("switch-bike-btn");
+    if (switchBtn) {
+      switchBtn.onclick = () => (window.location.href = "/bikes");
     }
 
     renderDashboard();
