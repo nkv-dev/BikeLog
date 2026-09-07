@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bikelog",
+  "compatibility_date": "2026-01-01",
+  "observability": {
+    "enabled": true
+  },
+  // KV namespaces (self-hosted single user, but kept generic).
+  // Create them:
+  //   wrangler kv namespace create BIKE_TOKENS
+  //   wrangler kv namespace create BIKE_SESSIONS
+  // then paste the returned ids.
+  "kv_namespaces": [
+    {
+      "binding": "BIKE_TOKENS",
+      "id": "REPLACE_WITH_KV_TOKEN_NAMESPACE_ID"
+    },
+    {
+      "binding": "BIKE_SESSIONS",
+      "id": "REPLACE_WITH_KV_SESSION_NAMESPACE_ID"
+    }
+  ],
+  // Non-secret GitHub App configuration (safe to commit).
+  "vars": {
+    "GITHUB_CLIENT_ID": "REPLACE_WITH_GITHUB_CLIENT_ID",
+    "GITHUB_APP_ID": "REPLACE_WITH_GITHUB_APP_ID",
+    "GITHUB_REPO_NAME": "bikelog",
+    "PUBLIC_SITE_URL": "http://localhost:4321"
+  },
+  // Store these secrets with `wrangler secret put` (never commit):
+  //   GITHUB_CLIENT_SECRET   - GitHub App client secret
+  //   GITHUB_PRIVATE_KEY     - GitHub App private key (PEM)
+  //   GITHUB_WEBHOOK_SECRET  - (optional) webhook secret
+}

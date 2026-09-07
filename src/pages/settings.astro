@@ -25,6 +25,14 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
       </div>
 
       <div class="rounded-xl border border-border bg-card p-4">
+        <h2 class="mb-3 text-sm font-semibold">GitHub Sync</h2>
+
+        <div id="github-account">
+          <p class="text-sm text-muted-foreground">Checking connection…</p>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-border bg-card p-4">
         <h2 class="mb-3 text-sm font-semibold">Data Management</h2>
         <div class="space-y-3">
           <button id="export-btn" class="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted">
@@ -91,6 +99,7 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
     import { exportAllData, importAllData, settingsStore } from "@/lib/store";
     import { showToast, confirmDialog } from "@/lib/toast";
     import { ACCENT_THEME_OPTIONS } from "@/lib/brand-themes";
+    import { github as githubClient, sync } from "@/lib/sync-client";
 
     function currentAccent(): string {
       return settingsStore.get().accentTheme ?? "auto";
@@ -123,6 +132,113 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
     }
 
     renderAccentPicker();
+
+    const me = () => githubClient.me();
+    const repos = () => githubClient.repos();
+
+    function renderGitHubAccount() {
+      const el = document.getElementById("github-account")!;
+      me()
+        .then(async (meRes) => {
+          if (!meRes.connected) {
+            el.innerHTML = `
+              <p class="text-sm text-muted-foreground mb-3">Store your data as Markdown in your own GitHub repo. Connect with GitHub to get started.</p>
+              <a href="/api/auth/connect" class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.2c-3.2.7-3.87-1.54-3.87-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.66.41.35.77 1.05.77 2.12v3.15c0 .31.21.68.8.56A10.5 10.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+                Connect with GitHub
+              </a>`;
+            return;
+          }
+
+          const reposData = await repos().catch(() => ({ repos: [], selected: meRes.repo ?? null }));
+          const selected = reposData.selected ?? meRes.repo ?? "";
+          const optionsHtml = (reposData.repos as any[])
+            .sort((a, b) => Number(b.private) - Number(a.private))
+            .map(
+              (r) =>
+                `<option value="${r.full_name}" ${r.full_name === selected ? "selected" : ""}>${r.full_name}${r.private ? " · private" : ""}</option>`
+            )
+            .join("");
+
+          el.innerHTML = `
+            <div class="flex items-center gap-3 mb-4">
+              ${meRes.avatar_url ? `<img src="${meRes.avatar_url}" alt="" class="h-10 w-10 rounded-full border border-border" />` : ""}
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold">${meRes.name || meRes.login}</p>
+                <p class="truncate text-xs text-muted-foreground">@${meRes.login}</p>
+              </div>
+              <button id="gh-disconnect" class="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">Disconnect</button>
+            </div>
+            <label class="mb-1 block text-xs font-medium text-muted-foreground" for="gh-repo">Data repo</label>
+            <select id="gh-repo" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" ${
+              reposData.repos.length === 0 ? "disabled" : ""
+            }>
+              ${optionsHtml || "<option value=''>No repos available</option>"}
+            </select>
+            <p class="mt-1 text-xs text-muted-foreground">Data is stored as Markdown in <code>bikelog/</code> in this repo.</p>
+            <div class="mt-3 flex gap-2">
+              <button id="gh-save" class="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90" ${
+                reposData.repos.length === 0 ? "disabled" : ""
+              }>Save repo</button>
+              <button id="gh-pull" class="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted">Pull data</button>
+              <button id="gh-push" class="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted">Push data</button>
+            </div>`;
+
+          el.querySelector("#gh-disconnect")!.addEventListener("click", async () => {
+            await githubClient.disconnect().catch(() => null);
+            renderGitHubAccount();
+            showToast("Disconnected from GitHub", "info");
+          });
+
+          el.querySelector("#gh-save")!.addEventListener("click", async () => {
+            const v = (el.querySelector("#gh-repo") as HTMLSelectElement).value;
+            if (!v) return showToast("Choose a repo first", "error");
+            try {
+              await githubClient.selectRepo(v);
+              showToast("Repo saved — data syncs here on save");
+            } catch (e) {
+              showToast((e as Error).message, "error");
+            }
+          });
+
+          const withBusy = (btn: HTMLButtonElement, label: string, restore: string, fn: () => Promise<void>) => async () => {
+            btn.disabled = true;
+            btn.textContent = label;
+            try {
+              await fn();
+            } catch (e) {
+              showToast((e as Error).message, "error");
+            } finally {
+              btn.disabled = false;
+              btn.textContent = restore;
+            }
+          };
+
+          const pullBtn = el.querySelector("#gh-pull") as HTMLButtonElement;
+          pullBtn.addEventListener(
+            "click",
+            withBusy(pullBtn, "Pulling…", "Pull data", async () => {
+              await sync.pull();
+              window.dispatchEvent(new Event("bikelog:data-changed"));
+              showToast("Data pulled from GitHub");
+            })
+          );
+
+          const pushBtn = el.querySelector("#gh-push") as HTMLButtonElement;
+          pushBtn.addEventListener(
+            "click",
+            withBusy(pushBtn, "Pushing…", "Push data", async () => {
+              await sync.push();
+              showToast("Data pushed to GitHub as Markdown");
+            })
+          );
+        })
+        .catch((e) => {
+          el.innerHTML = `<p class="text-sm text-muted-foreground">Couldn't check GitHub connection.</p><p class="text-xs text-destructive mt-1">${e.message}</p>`;
+        });
+    }
+
+    renderGitHubAccount();
 
     document.getElementById("export-btn")!.onclick = () => {
       const data = exportAllData();
