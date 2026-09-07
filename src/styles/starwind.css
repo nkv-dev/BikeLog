@@ -173,3 +173,215 @@
     }
   }
 }
+
+/* ===== Brand accent themes ===== */
+[data-theme="ktm"]{
+  --primary: #ff6600;
+  --primary-foreground: #ffffff;
+  --primary-accent: #e65c00;
+  --sidebar-primary: #ff6600;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="ktm"]{
+  --primary: #ff6a14;
+  --primary-foreground: #1a1a1a;
+  --primary-accent: #ffa05c;
+  --sidebar-primary: #ff6a14;
+  --sidebar-primary-foreground: #1a1a1a;
+}
+[data-theme="bajaj"]{
+  --primary: #2e62ff;
+  --primary-foreground: #ffffff;
+  --primary-accent: #274fd6;
+  --sidebar-primary: #2e62ff;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="bajaj"]{
+  --primary: #5b86ff;
+  --primary-foreground: #0b1020;
+  --primary-accent: #aac1ff;
+  --sidebar-primary: #5b86ff;
+  --sidebar-primary-foreground: #0b1020;
+}
+[data-theme="tvs"]{
+  --primary: #e30613;
+  --primary-foreground: #ffffff;
+  --primary-accent: #c20511;
+  --sidebar-primary: #e30613;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="tvs"]{
+  --primary: #ff4d57;
+  --primary-foreground: #200002;
+  --primary-accent: #ffa3a9;
+  --sidebar-primary: #ff4d57;
+  --sidebar-primary-foreground: #200002;
+}
+[data-theme="honda"]{
+  --primary: #cc0000;
+  --primary-foreground: #ffffff;
+  --primary-accent: #ab0000;
+  --sidebar-primary: #cc0000;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="honda"]{
+  --primary: #ff3b3b;
+  --primary-foreground: #220000;
+  --primary-accent: #ff9e9e;
+  --sidebar-primary: #ff3b3b;
+  --sidebar-primary-foreground: #220000;
+}
+[data-theme="yamaha"]{
+  --primary: #0039a6;
+  --primary-foreground: #ffffff;
+  --primary-accent: #002f8c;
+  --sidebar-primary: #0039a6;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="yamaha"]{
+  --primary: #4d7dff;
+  --primary-foreground: #081020;
+  --primary-accent: #aac3ff;
+  --sidebar-primary: #4d7dff;
+  --sidebar-primary-foreground: #081020;
+}
+[data-theme="royal-enfield"]{
+  --primary: #8a6d1f;
+  --primary-foreground: #ffffff;
+  --primary-accent: #6f5718;
+  --sidebar-primary: #8a6d1f;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="royal-enfield"]{
+  --primary: #d8b64e;
+  --primary-foreground: #1a1505;
+  --primary-accent: #ecd9a0;
+  --sidebar-primary: #d8b64e;
+  --sidebar-primary-foreground: #1a1505;
+}
+[data-theme="suzuki"]{
+  --primary: #1e5aa8;
+  --primary-foreground: #ffffff;
+  --primary-accent: #194b8e;
+  --sidebar-primary: #1e5aa8;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="suzuki"]{
+  --primary: #5b95e6;
+  --primary-foreground: #071425;
+  --primary-accent: #b6d4f8;
+  --sidebar-primary: #5b95e6;
+  --sidebar-primary-foreground: #071425;
+}
+[data-theme="kawasaki"]{
+  --primary: #009639;
+  --primary-foreground: #ffffff;
+  --primary-accent: #007d30;
+  --sidebar-primary: #009639;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="kawasaki"]{
+  --primary: #34c25e;
+  --primary-foreground: #03150a;
+  --primary-accent: #a9eec0;
+  --sidebar-primary: #34c25e;
+  --sidebar-primary-foreground: #03150a;
+}
+[data-theme="mahindra"]{
+  --primary: #e31837;
+  --primary-foreground: #ffffff;
+  --primary-accent: #c2132f;
+  --sidebar-primary: #e31837;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="mahindra"]{
+  --primary: #ff4d5e;
+  --primary-foreground: #240105;
+  --primary-accent: #ffa8b2;
+  --sidebar-primary: #ff4d5e;
+  --sidebar-primary-foreground: #240105;
+}
+[data-theme="triumph"]{
+  --primary: #c8102e;
+  --primary-foreground: #ffffff;
+  --primary-accent: #a80d26;
+  --sidebar-primary: #c8102e;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="triumph"]{
+  --primary: #f24a63;
+  --primary-foreground: #200308;
+  --primary-accent: #fbacb9;
+  --sidebar-primary: #f24a63;
+  --sidebar-primary-foreground: #200308;
+}
+[data-theme="harley-davidson"]{
+  --primary: #d4af37;
+  --primary-foreground: #1a1a1a;
+  --primary-accent: #b89424;
+  --sidebar-primary: #d4af37;
+  --sidebar-primary-foreground: #1a1a1a;
+}
+.dark[data-theme="harley-davidson"]{
+  --primary: #e8c866;
+  --primary-foreground: #1a1505;
+  --primary-accent: #f3e0a3;
+  --sidebar-primary: #e8c866;
+  --sidebar-primary-foreground: #1a1505;
+}
+[data-theme="indian"]{
+  --primary: #b3122f;
+  --primary-foreground: #ffffff;
+  --primary-accent: #960e27;
+  --sidebar-primary: #b3122f;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="indian"]{
+  --primary: #f04e66;
+  --primary-foreground: #24040c;
+  --primary-accent: #fbacb9;
+  --sidebar-primary: #f04e66;
+  --sidebar-primary-foreground: #24040c;
+}
+[data-theme="benelli"]{
+  --primary: #006847;
+  --primary-foreground: #ffffff;
+  --primary-accent: #00543a;
+  --sidebar-primary: #006847;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="benelli"]{
+  --primary: #2eb683;
+  --primary-foreground: #03150d;
+  --primary-accent: #a9eecf;
+  --sidebar-primary: #2eb683;
+  --sidebar-primary-foreground: #03150d;
+}
+[data-theme="cfmoto"]{
+  --primary: #005eb8;
+  --primary-foreground: #ffffff;
+  --primary-accent: #004e99;
+  --sidebar-primary: #005eb8;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="cfmoto"]{
+  --primary: #4d99e6;
+  --primary-foreground: #061425;
+  --primary-accent: #aaccee;
+  --sidebar-primary: #4d99e6;
+  --sidebar-primary-foreground: #061425;
+}
+[data-theme="hero"]{
+  --primary: #e2231a;
+  --primary-foreground: #ffffff;
+  --primary-accent: #c01c14;
+  --sidebar-primary: #e2231a;
+  --sidebar-primary-foreground: #ffffff;
+}
+.dark[data-theme="hero"]{
+  --primary: #ff544a;
+  --primary-foreground: #1f0201;
+  --primary-accent: #ffaba6;
+  --sidebar-primary: #ff544a;
+  --sidebar-primary-foreground: #1f0201;
+}
