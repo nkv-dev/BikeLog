@@ -5,11 +5,14 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
 
 <BaseLayout title="Settings" activePage="">
   <div class="mx-auto max-w-lg px-4 py-4">
-    <h1 class="mb-4 text-xl font-bold">Settings</h1>
+    <div>
+      <h1 class="text-xl font-bold tracking-tight">Settings</h1>
+      <p class="k-label mt-0.5">Appearance and data</p>
+    </div>
 
-    <div class="space-y-4">
+    <div class="mt-4 space-y-4">
       <div class="rounded-xl border border-border bg-card p-4">
-        <h2 class="mb-3 text-sm font-semibold">Appearance</h2>
+        <h2 class="mb-3 text-sm font-semibold tracking-tight">Appearance</h2>
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium">Dark Mode</p>
@@ -25,9 +28,9 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
       </div>
 
       <div class="rounded-xl border border-border bg-card p-4">
-        <h2 class="mb-3 text-sm font-semibold">Data Management</h2>
-        <div class="space-y-3">
-          <button id="export-btn" class="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted">
+        <h2 class="mb-3 text-sm font-semibold tracking-tight">Data Management</h2>
+        <div class="space-y-2">
+          <button id="export-btn" class="flex w-full items-center gap-3 rounded-xl border border-border bg-background p-3 text-left transition-colors hover:bg-muted active:scale-[0.99]">
             <div class="rounded-lg bg-green-500/10 p-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
@@ -39,7 +42,7 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
             </div>
           </button>
 
-          <button id="import-btn" class="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted">
+          <button id="import-btn" class="flex w-full items-center gap-3 rounded-xl border border-border bg-background p-3 text-left transition-colors hover:bg-muted active:scale-[0.99]">
             <div class="rounded-lg bg-blue-500/10 p-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
@@ -51,7 +54,7 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
             </div>
           </button>
 
-          <button id="clear-btn" class="flex w-full items-center gap-3 rounded-lg border border-destructive/30 p-3 text-left transition-colors hover:bg-destructive/5">
+          <button id="clear-btn" class="flex w-full items-center gap-3 rounded-xl border border-destructive/30 bg-background p-3 text-left transition-colors hover:bg-destructive/5 active:scale-[0.99]">
             <div class="rounded-lg bg-destructive/10 p-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-destructive">
                 <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
@@ -66,19 +69,15 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
       </div>
 
       <div class="rounded-xl border border-border bg-card p-4">
-        <h2 class="mb-3 text-sm font-semibold">About</h2>
+        <h2 class="mb-3 text-sm font-semibold tracking-tight">About</h2>
         <div class="space-y-2">
           <div class="flex justify-between text-sm">
-            <span class="text-muted-foreground">Version</span>
-            <span>1.0.0</span>
-          </div>
-          <div class="flex justify-between text-sm">
             <span class="text-muted-foreground">Built with</span>
-            <span>Astro + Starwind UI</span>
+            <span class="k-entry-mono">Astro + Starwind UI</span>
           </div>
           <div class="flex justify-between text-sm">
-            <span class="text-muted-foreground">Deployed on</span>
-            <span>Cloudflare Pages</span>
+            <span class="text-muted-foreground">Storage</span>
+            <span class="k-entry-mono">This device</span>
           </div>
         </div>
       </div>

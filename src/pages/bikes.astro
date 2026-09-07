@@ -1,12 +1,16 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { BIKE_BRANDS } from "@/lib/indian-utils";
 ---
 
 <BaseLayout title="My Bikes" activePage="bikes">
   <div class="mx-auto max-w-lg px-4 py-4">
     <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-xl font-bold">My Bikes</h1>
-      <button id="add-bike-btn" class="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">My Bikes</h1>
+        <p class="k-label mt-0.5">Your garage</p>
+      </div>
+      <button id="add-bike-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Add Bike
       </button>
@@ -47,10 +51,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
               <label for="bike-brand" class="mb-1 block text-sm font-medium">Brand</label>
               <select id="bike-brand" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                 <option value="">Select</option>
-                <option>Hero</option><option>Bajaj</option><option>TVS</option>
-                <option>Honda</option><option>Yamaha</option><option>Royal Enfield</option>
-                <option>KTM</option><option>Suzuki</option><option>Kawasaki</option>
-                <option>Mahindra</option><option>Triumph</option>
+                {BIKE_BRANDS.map((b) => <option value={b}>{b}</option>)}
               </select>
             </div>
             <div>
@@ -107,24 +108,31 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       bikeList!.innerHTML = bikes
         .map(
           (bike) => `
-        <div class="rounded-xl border border-border bg-card p-4">
-          <div class="flex items-start justify-between">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <h3 class="font-semibold truncate">${bike.name}</h3>
-                ${bike.id === settings.activeBikeId ? '<span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">Active</span>' : ""}
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary" aria-hidden="true"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3.5-3.5 2-3 2 3h3"/></svg>
               </div>
-              <p class="text-sm text-muted-foreground">${bike.brand} ${bike.model} · ${bike.year}</p>
-              <p class="text-xs text-muted-foreground">${bike.odometer.toLocaleString("en-IN")} km · ${bike.fuelType}</p>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="truncate font-semibold tracking-tight">${bike.name}</h3>
+                  ${bike.id === settings.activeBikeId ? '<span class="inline-flex shrink-0 items-center rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-primary">Active</span>' : ""}
+                </div>
+                <p class="k-entry-mono mt-0.5">${bike.brand} ${bike.model} · ${bike.year}</p>
+                <p class="k-stat mt-1.5 text-lg font-semibold text-card-foreground">${bike.odometer.toLocaleString("en-IN")} km</p>
+              </div>
             </div>
-            <div class="flex items-center gap-1">
-              ${bike.id !== settings.activeBikeId ? `<button onclick="setActiveBike('${bike.id}')" class="rounded-lg px-2 py-1 text-xs text-primary hover:bg-muted">Set Active</button>` : ""}
-              <button onclick="editBike('${bike.id}')" aria-label="Edit ${bike.name}" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-              </button>
-              <button onclick="deleteBike('${bike.id}')" aria-label="Delete ${bike.name}" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-              </button>
+            <div class="flex shrink-0 flex-col items-end gap-1">
+              ${bike.id !== settings.activeBikeId ? `<button onclick="setActiveBike('${bike.id}')" class="rounded-lg px-2 py-1 text-xs font-medium text-primary hover:bg-muted">Set Active</button>` : ""}
+              <div class="flex items-center gap-1">
+                <button onclick="editBike('${bike.id}')" aria-label="Edit ${bike.name}" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                </button>
+                <button onclick="deleteBike('${bike.id}')" aria-label="Delete ${bike.name}" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>`

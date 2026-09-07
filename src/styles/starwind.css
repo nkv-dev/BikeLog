@@ -4,6 +4,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-short: 180ms;
+  --duration-long: 420ms;
+
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
@@ -55,6 +63,13 @@
   --color-input: var(--input);
   --color-outline: var(--outline);
 
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-rule-strong: var(--rule-strong);
+  --color-ink-soft: var(--ink-soft);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+
   --radius-xs: calc(var(--radius) - 0.375rem);
   --radius-sm: calc(var(--radius) - 0.25rem);
   --radius-md: calc(var(--radius) - 0.125rem);
@@ -103,6 +118,15 @@
   --outline: var(--color-neutral-400);
   --radius: 0.625rem;
 
+  --surface-raised: var(--color-white);
+  --surface-sunken: var(--color-neutral-100);
+  --rule-strong: var(--color-neutral-300);
+  --ink-soft: var(--color-neutral-500);
+  --tint-ink: rgba(0 0 0 / 0.04);
+  --tint-ink-strong: rgba(0 0 0 / 0.08);
+  --shadow-card: 0 1px 2px 0 rgba(0 0 0 / 0.06), 0 8px 24px -12px rgba(0 0 0 / 0.12);
+  --shadow-pop: 0 2px 4px 0 rgba(0 0 0 / 0.08), 0 16px 40px -16px rgba(0 0 0 / 0.18);
+
   /* sidebar variables */
   --sidebar-background: var(--color-neutral-50);
   --sidebar-foreground: var(--color-neutral-950);
@@ -142,6 +166,15 @@
   --border: --alpha(var(--color-neutral-50) / 10%);
   --input: --alpha(var(--color-neutral-50) / 15%);
   --outline: var(--color-neutral-500);
+
+  --surface-raised: var(--color-neutral-800);
+  --surface-sunken: var(--color-neutral-900);
+  --rule-strong: var(--color-neutral-600);
+  --ink-soft: var(--color-neutral-400);
+  --tint-ink: rgba(255 255 255 / 0.05);
+  --tint-ink-strong: rgba(255 255 255 / 0.09);
+  --shadow-card: 0 1px 2px 0 rgba(0 0 0 / 0.4), 0 12px 32px -16px rgba(0 0 0 / 0.6);
+  --shadow-pop: 0 2px 4px 0 rgba(0 0 0 / 0.5), 0 20px 48px -20px rgba(0 0 0 / 0.7);
 
   /* sidebars variables */
   --sidebar-background: var(--color-neutral-900);
@@ -384,4 +417,95 @@
   --primary-accent: #ffaba6;
   --sidebar-primary: #ff544a;
   --sidebar-primary-foreground: #1f0201;
+}
+
+/* ===== Design system layer ===== */
+
+@layer components {
+  /* Label voice: small mono uppercase key labels */
+  .k-label {
+    @apply font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground;
+  }
+  .k-label-aloud {
+    @apply font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-primary;
+  }
+
+  /* Stat readout: instrument-gauge value */
+  .k-stat {
+    @apply font-mono font-semibold tabular-nums tracking-[-0.02em];
+  }
+
+  /* Unified entry card */
+  .k-entry {
+    @apply rounded-xl border border-border bg-card p-4 transition-[transform,box-shadow,background-color] duration-200 ease-out;
+  }
+  .k-entry-row {
+    @apply flex items-start justify-between gap-3;
+  }
+  .k-entry-dot {
+    @apply mt-[7px] h-2 w-2 shrink-0 rounded-full;
+  }
+  .k-entry-title {
+    @apply text-sm font-medium text-card-foreground;
+  }
+  .k-entry-sub {
+    @apply mt-0.5 text-xs text-muted-foreground;
+  }
+  .k-entry-mono {
+    @apply font-mono text-xs text-muted-foreground tabular-nums;
+  }
+
+  /* Press feedback (skill: animate only transform/opacity) */
+  .k-press {
+    @apply active:scale-[0.97];
+  }
+  .k-press-card {
+    @apply cursor-pointer transition-all duration-200 ease-out;
+  }
+  @media (hover: hover) {
+    .k-press-card:hover {
+      @apply -translate-y-0.5 shadow-pop;
+    }
+  }
+
+  /* Tactile quick-action button */
+  .k-action {
+    @apply flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-left transition-[transform,box-shadow,background-color] duration-200 ease-out active:scale-[0.97];
+  }
+  @media (hover: hover) {
+    .k-action:hover {
+      @apply -translate-y-0.5 shadow-pop bg-surface-raised;
+    }
+  }
+
+  /* Hero/bike identity chip */
+  .k-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-ink-soft;
+  }
+
+  /* Entrance motion (transform + opacity only) */
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .js .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal,
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .k-press,
+  .k-press-card,
+  .k-action {
+    transform: none !important;
+    transition: none !important;
+  }
 }
