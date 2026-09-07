@@ -1,6 +1,8 @@
 ---
 import { ThemeToggle } from "@/components/starwind/theme-toggle";
 import { ThemeInitScript } from "@starwind-ui/astro/theme";
+import "@fontsource-variable/plus-jakarta-sans";
+import "@fontsource-variable/jetbrains-mono";
 import "@/styles/starwind.css";
 
 interface Props {
@@ -28,11 +30,14 @@ const icons: Record<string, string> = {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#18181b" />
+    <script is:inline>
+      document.documentElement.classList.replace("no-js", "js");
+    </script>
     <script is:inline>
       (function () {
         var meta = document.querySelector('meta[name="theme-color"]');
@@ -47,6 +52,7 @@ const icons: Record<string, string> = {
         window.addEventListener("astro:after-swap", apply);
       })();
     </script>
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="Track your bike's mileage, fuel, servicing and repairs" />
@@ -103,15 +109,18 @@ const icons: Record<string, string> = {
   </head>
   <body class="bg-background text-foreground min-h-screen">
     <header class="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2.5">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary" aria-hidden="true">
           <circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3.5-3.5 2-3 2 3h3"/>
         </svg>
-        <h1 class="text-lg font-bold tracking-tight">BikeLog</h1>
+        <div class="flex flex-col leading-none">
+          <h1 class="text-lg font-bold tracking-tight">BikeLog</h1>
+          <span class="k-label-aloud mt-0.5 hidden sm:inline">Mileage ledger</span>
+        </div>
       </div>
       <div id="bike-selector-container" class="flex items-center gap-2">
         <span class="hidden text-sm text-muted-foreground sm:inline" id="active-bike-name" aria-live="polite">No bike selected</span>
-        <a href="/settings" aria-label="Settings" class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+        <a href="/settings" aria-label="Settings" class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
           </svg>
