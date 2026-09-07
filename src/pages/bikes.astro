@@ -1,0 +1,217 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="My Bikes" activePage="bikes">
+  <div class="mx-auto max-w-lg px-4 py-4">
+    <div class="mb-4 flex items-center justify-between">
+      <h1 class="text-xl font-bold">My Bikes</h1>
+      <button id="add-bike-btn" class="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Add Bike
+      </button>
+    </div>
+
+    <div id="bike-list" class="space-y-3"></div>
+
+    <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-center">
+      <div class="mb-4 rounded-full bg-muted p-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
+          <circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3.5-3.5 2-3 2 3h3"/>
+        </svg>
+      </div>
+      <h2 class="mb-2 text-lg font-bold">No bikes yet</h2>
+      <p class="text-sm text-muted-foreground">Add your first bike to start tracking.</p>
+    </div>
+  </div>
+
+  <div id="bike-dialog" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-black/50" id="bike-dialog-overlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
+      <div class="mx-auto max-w-lg">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="dialog-title" class="text-lg font-bold">Add Bike</h2>
+          <button id="close-dialog-btn" class="rounded-lg p-1 text-muted-foreground hover:bg-muted">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <form id="bike-form" class="space-y-4">
+          <input type="hidden" id="bike-id" />
+          <div>
+            <label for="bike-name" class="mb-1 block text-sm font-medium">Bike Name</label>
+            <input type="text" id="bike-name" required placeholder="e.g. My Pulsar 150" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="bike-brand" class="mb-1 block text-sm font-medium">Brand</label>
+              <select id="bike-brand" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="">Select</option>
+                <option>Hero</option><option>Bajaj</option><option>TVS</option>
+                <option>Honda</option><option>Yamaha</option><option>Royal Enfield</option>
+                <option>KTM</option><option>Suzuki</option><option>Kawasaki</option>
+                <option>Mahindra</option><option>Triumph</option>
+              </select>
+            </div>
+            <div>
+              <label for="bike-model" class="mb-1 block text-sm font-medium">Model</label>
+              <input type="text" id="bike-model" required placeholder="e.g. Pulsar 150" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="bike-year" class="mb-1 block text-sm font-medium">Year</label>
+              <input type="number" id="bike-year" required min="1990" max="2030" placeholder="2024" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label for="bike-odometer" class="mb-1 block text-sm font-medium">Current Odometer (km)</label>
+              <input type="number" id="bike-odometer" required min="0" placeholder="12000" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+          <div>
+            <label for="bike-fuel" class="mb-1 block text-sm font-medium">Fuel Type</label>
+            <select id="bike-fuel" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+              <option value="petrol">Petrol</option>
+              <option value="diesel">Diesel</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full rounded-lg bg-primary py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+            Save Bike
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { bikeStore, settingsStore } from "@/lib/store";
+    import { generateId } from "@/lib/indian-utils";
+
+    function renderBikes() {
+      const bikes = bikeStore.getAll();
+      const settings = settingsStore.get();
+      const bikeList = document.getElementById("bike-list");
+      const emptyState = document.getElementById("empty-state");
+
+      if (bikes.length === 0) {
+        bikeList!.classList.add("hidden");
+        emptyState!.classList.remove("hidden");
+        return;
+      }
+
+      bikeList!.classList.remove("hidden");
+      emptyState!.classList.add("hidden");
+
+      bikeList!.innerHTML = bikes
+        .map(
+          (bike) => `
+        <div class="rounded-xl border border-border bg-card p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <h3 class="font-semibold truncate">${bike.name}</h3>
+                ${bike.id === settings.activeBikeId ? '<span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">Active</span>' : ""}
+              </div>
+              <p class="text-sm text-muted-foreground">${bike.brand} ${bike.model} · ${bike.year}</p>
+              <p class="text-xs text-muted-foreground">${bike.odometer.toLocaleString("en-IN")} km · ${bike.fuelType}</p>
+            </div>
+            <div class="flex items-center gap-1">
+              ${bike.id !== settings.activeBikeId ? `<button onclick="setActiveBike('${bike.id}')" class="rounded-lg px-2 py-1 text-xs text-primary hover:bg-muted">Set Active</button>` : ""}
+              <button onclick="editBike('${bike.id}')" class="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              </button>
+              <button onclick="deleteBike('${bike.id}')" class="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>`
+        )
+        .join("");
+    }
+
+    const dialog = document.getElementById("bike-dialog")!;
+    const overlay = document.getElementById("bike-dialog-overlay")!;
+    const form = document.getElementById("bike-form") as HTMLFormElement;
+    const titleEl = document.getElementById("dialog-title")!;
+
+    function openDialog() {
+      dialog.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeDialog() {
+      dialog.classList.add("hidden");
+      document.body.style.overflow = "";
+      form.reset();
+      (document.getElementById("bike-id") as HTMLInputElement).value = "";
+      titleEl.textContent = "Add Bike";
+    }
+
+    document.getElementById("add-bike-btn")!.onclick = openDialog;
+    document.getElementById("close-dialog-btn")!.onclick = closeDialog;
+    overlay.onclick = closeDialog;
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const id = (document.getElementById("bike-id") as HTMLInputElement).value;
+      const bike = {
+        id: id || generateId(),
+        name: (document.getElementById("bike-name") as HTMLInputElement).value,
+        brand: (document.getElementById("bike-brand") as HTMLSelectElement).value,
+        model: (document.getElementById("bike-model") as HTMLInputElement).value,
+        year: parseInt((document.getElementById("bike-year") as HTMLInputElement).value),
+        odometer: parseInt((document.getElementById("bike-odometer") as HTMLInputElement).value),
+        fuelType: (document.getElementById("bike-fuel") as HTMLSelectElement).value as "petrol" | "diesel",
+        createdAt: new Date().toISOString(),
+      };
+
+      if (id) {
+        bikeStore.update(id, bike);
+      } else {
+        bikeStore.add(bike);
+        const settings = settingsStore.get();
+        if (!settings.activeBikeId) {
+          settingsStore.update({ activeBikeId: bike.id });
+        }
+      }
+
+      closeDialog();
+      renderBikes();
+      window.dispatchEvent(new Event("bikelog:data-changed"));
+      document.dispatchEvent(new Event("bikelog:bikes-changed"));
+    };
+
+    (window as any).setActiveBike = (id: string) => {
+      settingsStore.update({ activeBikeId: id });
+      renderBikes();
+      window.dispatchEvent(new Event("bikelog:data-changed"));
+      document.dispatchEvent(new Event("bikelog:bikes-changed"));
+    };
+
+    (window as any).editBike = (id: string) => {
+      const bike = bikeStore.getById(id);
+      if (!bike) return;
+      titleEl.textContent = "Edit Bike";
+      (document.getElementById("bike-id") as HTMLInputElement).value = bike.id;
+      (document.getElementById("bike-name") as HTMLInputElement).value = bike.name;
+      (document.getElementById("bike-brand") as HTMLSelectElement).value = bike.brand;
+      (document.getElementById("bike-model") as HTMLInputElement).value = bike.model;
+      (document.getElementById("bike-year") as HTMLInputElement).value = bike.year.toString();
+      (document.getElementById("bike-odometer") as HTMLInputElement).value = bike.odometer.toString();
+      (document.getElementById("bike-fuel") as HTMLSelectElement).value = bike.fuelType;
+      openDialog();
+    };
+
+    (window as any).deleteBike = (id: string) => {
+      if (confirm("Delete this bike and all its entries?")) {
+        bikeStore.remove(id);
+        renderBikes();
+        window.dispatchEvent(new Event("bikelog:data-changed"));
+        document.dispatchEvent(new Event("bikelog:bikes-changed"));
+      }
+    };
+
+    renderBikes();
+  </script>
+</BaseLayout>
