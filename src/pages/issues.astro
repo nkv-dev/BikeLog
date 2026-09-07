@@ -17,17 +17,17 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       <a href="/bikes" class="mt-2 inline-block text-sm text-primary hover:underline">Add a bike</a>
     </div>
 
-    <div id="issues-list" class="space-y-3"></div>
+    <div id="issues-list" class="space-y-3" aria-live="polite"></div>
   </div>
 
-  <div id="issue-dialog" class="fixed inset-0 z-50 hidden">
+  <div id="issue-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="issue-dialog-title" tabindex="-1">
     <div class="fixed inset-0 bg-black/50" id="issue-dialog-overlay"></div>
     <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
       <div class="mx-auto max-w-lg">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-lg font-bold">Report Issue</h2>
-          <button id="close-issue-dialog" class="rounded-lg p-1 text-muted-foreground hover:bg-muted">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <h2 id="issue-dialog-title" class="text-lg font-bold">Report Issue</h2>
+          <button id="close-issue-dialog" aria-label="Close dialog" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
 
@@ -95,6 +95,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
   <script>
     import { bikeStore, issueStore, settingsStore } from "@/lib/store";
     import { generateId, formatINR, formatOdometer, formatDate, SEVERITY_CONFIG, STATUS_CONFIG } from "@/lib/indian-utils";
+    import { showToast, confirmDialog } from "@/lib/toast";
 
     function getActiveBikeId(): string | null {
       return settingsStore.get().activeBikeId;
@@ -104,20 +105,23 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       const bikeId = getActiveBikeId();
       const list = document.getElementById("issues-list");
       const noBikeMsg = document.getElementById("no-bike-msg");
+      const addBtn = document.getElementById("add-issue-btn");
 
       if (!bikeId) {
         list!.classList.add("hidden");
         noBikeMsg!.classList.remove("hidden");
+        addBtn!.classList.add("hidden");
         return;
       }
 
       list!.classList.remove("hidden");
       noBikeMsg!.classList.add("hidden");
+      addBtn!.classList.remove("hidden");
 
       const entries = issueStore.getByBike(bikeId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       if (entries.length === 0) {
-        list!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No issues reported yet.</p></div>`;
+        list!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No issues reported yet. Tap <strong>Report Issue</strong> if something goes wrong with your bike.</p></div>`;
         return;
       }
 
@@ -137,8 +141,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
             </div>
             <div class="flex items-center gap-1">
               ${e.estimatedCost ? `<p class="text-sm font-semibold">${formatINR(e.estimatedCost)}</p>` : ""}
-              <button onclick="deleteIssue('${e.id}')" class="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <button onclick="deleteIssue('${e.id}')" aria-label="Delete this issue" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
           </div>
@@ -150,18 +154,38 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     const dialog = document.getElementById("issue-dialog")!;
     const overlay = document.getElementById("issue-dialog-overlay")!;
     const form = document.getElementById("issue-form") as HTMLFormElement;
+    let lastFocused: HTMLElement | null = null;
 
     function openDialog() {
+      if (!getActiveBikeId()) {
+        showToast("Please add and select a bike first.", "error");
+        window.location.href = "/bikes";
+        return;
+      }
+      lastFocused = document.activeElement as HTMLElement;
       dialog.classList.remove("hidden");
       document.body.style.overflow = "hidden";
+      const bikeId = getActiveBikeId();
+      const bike = bikeId ? bikeStore.getById(bikeId) : null;
+      const odometerEl = document.getElementById("issue-odometer") as HTMLInputElement;
+      if (bike) odometerEl.value = bike.odometer.toString();
       (document.getElementById("issue-date") as HTMLInputElement).value = new Date().toISOString().split("T")[0];
+      (document.getElementById("issue-title") as HTMLInputElement).focus();
     }
 
     function closeDialog() {
       dialog.classList.add("hidden");
       document.body.style.overflow = "";
       form.reset();
+      if (lastFocused) lastFocused.focus();
     }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dialog.classList.contains("hidden")) {
+        e.preventDefault();
+        closeDialog();
+      }
+    });
 
     document.getElementById("add-issue-btn")!.onclick = openDialog;
     document.getElementById("close-issue-dialog")!.onclick = closeDialog;
@@ -170,7 +194,10 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     form.onsubmit = (e) => {
       e.preventDefault();
       const bikeId = getActiveBikeId();
-      if (!bikeId) return;
+      if (!bikeId) {
+        showToast("Please select a bike first.", "error");
+        return;
+      }
 
       const entry = {
         id: generateId(),
@@ -189,15 +216,17 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       issueStore.add(entry);
       closeDialog();
       renderEntries();
+      showToast("Issue reported");
       window.dispatchEvent(new Event("bikelog:data-changed"));
     };
 
     (window as any).deleteIssue = (id: string) => {
-      if (confirm("Delete this issue?")) {
+      confirmDialog("Delete this issue?", () => {
         issueStore.remove(id);
         renderEntries();
+        showToast("Issue deleted", "info");
         window.dispatchEvent(new Event("bikelog:data-changed"));
-      }
+      });
     };
 
     renderEntries();

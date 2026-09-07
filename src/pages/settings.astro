@@ -84,6 +84,7 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
 
   <script>
     import { exportAllData, importAllData } from "@/lib/store";
+    import { showToast, confirmDialog } from "@/lib/toast";
 
     document.getElementById("export-btn")!.onclick = () => {
       const data = exportAllData();
@@ -94,6 +95,7 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
       a.download = `bikelog-backup-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast("Backup downloaded", "success");
     };
 
     document.getElementById("import-btn")!.onclick = () => {
@@ -107,27 +109,28 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
       reader.onload = () => {
         const success = importAllData(reader.result as string);
         if (success) {
-          alert("Data imported successfully!");
+          showToast("Data imported successfully");
           window.dispatchEvent(new Event("bikelog:data-changed"));
           document.dispatchEvent(new Event("bikelog:bikes-changed"));
           location.reload();
         } else {
-          alert("Failed to import data. Please check the file format.");
+          showToast("Failed to import. Please check the file format.", "error");
         }
       };
       reader.readAsText(file);
+      (e.target as HTMLInputElement).value = "";
     });
 
     document.getElementById("clear-btn")!.onclick = () => {
-      if (confirm("Are you sure? This will delete ALL your data permanently.")) {
+      confirmDialog("This will permanently delete ALL bikes, fuel, service, and issue data.", () => {
         localStorage.removeItem("bikelog_bikes");
         localStorage.removeItem("bikelog_fuel");
         localStorage.removeItem("bikelog_service");
         localStorage.removeItem("bikelog_issues");
         localStorage.removeItem("bikelog_settings");
-        alert("All data cleared.");
+        showToast("All data cleared", "info");
         location.reload();
-      }
+      });
     };
   </script>
 </BaseLayout>

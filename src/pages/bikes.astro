@@ -12,11 +12,11 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       </button>
     </div>
 
-    <div id="bike-list" class="space-y-3"></div>
+          <div id="bike-list" class="space-y-3" aria-live="polite"></div>
 
     <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-center">
       <div class="mb-4 rounded-full bg-muted p-4">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground" aria-hidden="true">
           <circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3.5-3.5 2-3 2 3h3"/>
         </svg>
       </div>
@@ -25,14 +25,14 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     </div>
   </div>
 
-  <div id="bike-dialog" class="fixed inset-0 z-50 hidden">
+  <div id="bike-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabindex="-1">
     <div class="fixed inset-0 bg-black/50" id="bike-dialog-overlay"></div>
     <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
       <div class="mx-auto max-w-lg">
         <div class="mb-4 flex items-center justify-between">
           <h2 id="dialog-title" class="text-lg font-bold">Add Bike</h2>
-          <button id="close-dialog-btn" class="rounded-lg p-1 text-muted-foreground hover:bg-muted">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <button id="close-dialog-btn" aria-label="Close dialog" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
 
@@ -86,6 +86,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
   <script>
     import { bikeStore, settingsStore } from "@/lib/store";
     import { generateId } from "@/lib/indian-utils";
+    import { showToast, confirmDialog } from "@/lib/toast";
+    let lastFocused: HTMLElement | null = null;
 
     function renderBikes() {
       const bikes = bikeStore.getAll();
@@ -117,11 +119,11 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
             </div>
             <div class="flex items-center gap-1">
               ${bike.id !== settings.activeBikeId ? `<button onclick="setActiveBike('${bike.id}')" class="rounded-lg px-2 py-1 text-xs text-primary hover:bg-muted">Set Active</button>` : ""}
-              <button onclick="editBike('${bike.id}')" class="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              <button onclick="editBike('${bike.id}')" aria-label="Edit ${bike.name}" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
               </button>
-              <button onclick="deleteBike('${bike.id}')" class="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <button onclick="deleteBike('${bike.id}')" aria-label="Delete ${bike.name}" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
           </div>
@@ -136,8 +138,10 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     const titleEl = document.getElementById("dialog-title")!;
 
     function openDialog() {
+      lastFocused = document.activeElement as HTMLElement;
       dialog.classList.remove("hidden");
       document.body.style.overflow = "hidden";
+      (document.getElementById("bike-name") as HTMLInputElement).focus();
     }
 
     function closeDialog() {
@@ -146,7 +150,15 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       form.reset();
       (document.getElementById("bike-id") as HTMLInputElement).value = "";
       titleEl.textContent = "Add Bike";
+      if (lastFocused) lastFocused.focus();
     }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dialog.classList.contains("hidden")) {
+        e.preventDefault();
+        closeDialog();
+      }
+    });
 
     document.getElementById("add-bike-btn")!.onclick = openDialog;
     document.getElementById("close-dialog-btn")!.onclick = closeDialog;
@@ -204,12 +216,13 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     };
 
     (window as any).deleteBike = (id: string) => {
-      if (confirm("Delete this bike and all its entries?")) {
+      confirmDialog("Delete this bike and all its entries? This cannot be undone.", () => {
         bikeStore.remove(id);
         renderBikes();
+        showToast("Bike deleted", "info");
         window.dispatchEvent(new Event("bikelog:data-changed"));
         document.dispatchEvent(new Event("bikelog:bikes-changed"));
-      }
+      });
     };
 
     renderBikes();

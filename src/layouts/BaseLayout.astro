@@ -56,13 +56,18 @@ const icons: Record<string, string> = {
   <body class="bg-background text-foreground min-h-screen">
     <header class="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div class="flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary" aria-hidden="true">
           <circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3.5-3.5 2-3 2 3h3"/>
         </svg>
         <h1 class="text-lg font-bold tracking-tight">BikeLog</h1>
       </div>
       <div id="bike-selector-container" class="flex items-center gap-2">
-        <span class="hidden text-sm text-muted-foreground sm:inline" id="active-bike-name">No bike selected</span>
+        <span class="hidden text-sm text-muted-foreground sm:inline" id="active-bike-name" aria-live="polite">No bike selected</span>
+        <a href="/settings" aria-label="Settings" class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </a>
       </div>
     </header>
 
@@ -71,20 +76,21 @@ const icons: Record<string, string> = {
     </main>
 
     <nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
-      <div class="mx-auto flex max-w-lg items-center justify-around py-2">
+      <div class="mx-auto flex max-w-lg items-center justify-around py-1">
         {navItems.map((item) => (
           <a
             href={item.href}
             class:list={[
-              "flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs font-medium transition-colors",
+              "flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-lg px-2 text-xs font-medium transition-colors active:scale-95",
               activePage === item.id
                 ? "text-primary"
                 : "text-muted-foreground hover:text-foreground",
             ]}
             aria-label={item.label}
+            aria-current={activePage === item.id ? "page" : undefined}
           >
             <span class:list={["flex h-6 w-6 items-center justify-center", activePage === item.id && "text-primary"]}>
-              <Fragment set:html={icons[item.icon]} />
+              <Fragment set:html={icons[item.icon]} aria-hidden="true" />
             </span>
             <span>{item.label}</span>
           </a>
