@@ -93,6 +93,7 @@ export const issueStore = {
 const DEFAULT_SETTINGS: AppSettings = {
   activeBikeId: null,
   theme: "system",
+  accentTheme: "auto",
 };
 
 export const settingsStore = {
