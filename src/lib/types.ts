@@ -50,7 +50,10 @@ export interface IssueEntry {
   notes?: string;
 }
 
+export type AccentThemeValue = "auto" | "default" | string;
+
 export interface AppSettings {
   activeBikeId: string | null;
   theme: "light" | "dark" | "system";
+  accentTheme?: AccentThemeValue;
 }
