@@ -86,7 +86,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
   </div>
 
   <script>
-    import { bikeStore, fuelStore, serviceStore, issueStore } from "@/lib/store";
+    import { bikeStore, fuelStore, serviceStore } from "@/lib/store";
     import { calculateMileage, calculateTotalKm, calculateMonthlySpend } from "@/lib/mileage";
     import { formatINR, formatOdometer, formatDate } from "@/lib/indian-utils";
 
@@ -155,7 +155,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
       const fuelEntries = fuelStore.getByBike(bike.id);
       const serviceEntries = serviceStore.getByBike(bike.id);
-      const issueEntries = issueStore.getByBike(bike.id);
+      const issueEntries = serviceEntries.filter((e) => e.type === "issue");
 
       const totalKm = calculateTotalKm(fuelEntries);
       const avgMileage = calculateMileage(fuelEntries);
