@@ -2,8 +2,11 @@ import {
   bikeStore,
   fuelStore,
   serviceStore,
-  issueStore,
+  rideStore,
+  modificationStore,
+  checklistStore,
   hydrateAll,
+  migrateLegacyIssues,
 } from "./store";
 import type { Bike } from "./types";
 
@@ -53,11 +56,14 @@ export const sync = {
 
   /** Push current localStorage data to the user's repo (as Markdown). Throws on error. */
   async push(): Promise<void> {
+    migrateLegacyIssues();
     const data = {
       bikes: bikeStore.getAll(),
       fuel: fuelStore.getAll(),
       service: serviceStore.getAll(),
-      issues: issueStore.getAll(),
+      rides: rideStore.getAll(),
+      modifications: modificationStore.getAll(),
+      checklists: checklistStore.getAll(),
     };
     await api<{ ok: boolean }>("/api/sync/push", {
       method: "POST",
@@ -66,7 +72,7 @@ export const sync = {
     });
   },
 
-  /** Upload a photo to bikelog/assets/ and return its repo-relative path. */
+  /** Upload a photo to bikelog/bikes/<slug>/media/ and return its repo-relative path. */
   async uploadPhoto(bike: Bike, file: File): Promise<string> {
     const form = new FormData();
     form.append("bikeName", bike.name);
@@ -84,4 +90,4 @@ export const sync = {
 export const mediaUrl = (path: string) => `/api/sync/media?path=${encodeURIComponent(path)}`;
 
 /** True/False helper guards. */
-export { fuelStore, serviceStore, issueStore };
+export { fuelStore, serviceStore, rideStore, modificationStore, checklistStore };
