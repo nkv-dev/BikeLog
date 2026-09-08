@@ -31,3 +31,4 @@ secrets/
 
 # cloudflare wrangler
 .wrangler/
+cloudflare.txt

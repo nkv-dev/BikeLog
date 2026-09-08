@@ -5,28 +5,31 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 <BaseLayout title="Fuel Log" activePage="fuel">
   <div class="mx-auto max-w-lg px-4 py-4">
     <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-xl font-bold">Fuel Log</h1>
-      <button id="add-fuel-btn" class="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Fuel Log</h1>
+        <p class="k-label mt-0.5">Fill-ups and mileage</p>
+      </div>
+      <button id="add-fuel-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Add Entry
       </button>
     </div>
 
-    <div id="mileage-summary" class="mb-4 rounded-xl border border-border bg-card p-4">
+    <div id="mileage-summary" class="mb-4 rounded-2xl border border-border bg-card p-4 shadow-card">
       <div class="grid grid-cols-3 gap-3 text-center">
         <div>
-          <p class="text-[10px] text-muted-foreground">Avg Mileage</p>
-          <p id="fuel-avg" class="text-lg font-bold">--</p>
-          <p class="text-[10px] text-muted-foreground">km/l</p>
+          <p class="k-label">Avg mileage</p>
+          <p id="fuel-avg" class="k-stat mt-1 text-2xl font-bold text-card-foreground">--</p>
+          <p class="k-label mt-0.5 text-foreground/50">km/l</p>
         </div>
         <div>
-          <p class="text-[10px] text-muted-foreground">Last Fill</p>
-          <p id="fuel-last" class="text-lg font-bold">--</p>
-          <p class="text-[10px] text-muted-foreground">km/l</p>
+          <p class="k-label">Last fill</p>
+          <p id="fuel-last" class="k-stat mt-1 text-2xl font-bold text-card-foreground">--</p>
+          <p class="k-label mt-0.5 text-foreground/50">km/l</p>
         </div>
         <div>
-          <p class="text-[10px] text-muted-foreground">Total Spent</p>
-          <p id="fuel-total" class="text-lg font-bold">₹0</p>
+          <p class="k-label">Total spent</p>
+          <p id="fuel-total" class="k-stat mt-1 text-2xl font-bold text-card-foreground">₹0</p>
         </div>
       </div>
     </div>
@@ -145,16 +148,19 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       fuelList!.innerHTML = entries
         .map(
           (e) => `
-        <div class="rounded-xl border border-border bg-card p-4">
-          <div class="flex items-start justify-between">
-            <div>
-              <p class="font-semibold">${formatOdometer(e.odometer)}</p>
-              <p class="text-sm text-muted-foreground">${e.litres}L × ${formatINR(e.pricePerLitre)}/L</p>
-              <p class="text-xs text-muted-foreground">${formatDate(e.date)}${e.isFullTank ? " · Full tank" : ""}${e.station ? " · " + e.station : ""}</p>
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="flex items-start gap-3">
+              <span class="k-entry-dot bg-green-500" aria-hidden="true"></span>
+              <div class="min-w-0">
+                <p class="k-entry-title">${formatOdometer(e.odometer)}</p>
+                <p class="k-entry-mono mt-0.5">${e.litres}L × ${formatINR(e.pricePerLitre)}/L</p>
+                <p class="k-entry-sub mt-0.5">${formatDate(e.date)}${e.isFullTank ? " · Full tank" : ""}${e.station ? " · " + e.station : ""}</p>
+              </div>
             </div>
-            <div class="text-right">
-              <p class="font-semibold">${formatINR(e.totalCost)}</p>
-              <button onclick="deleteFuel('${e.id}')" aria-label="Delete this fuel entry" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+            <div class="flex items-start gap-1">
+              <p class="k-stat text-base font-semibold text-card-foreground">${formatINR(e.totalCost)}</p>
+              <button onclick="deleteFuel('${e.id}')" aria-label="Delete this fuel entry" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
