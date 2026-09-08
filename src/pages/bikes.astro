@@ -247,6 +247,43 @@ import { BIKE_BRANDS } from "@/lib/indian-utils";
 
     const photoFile = document.getElementById("photo-file") as HTMLInputElement;
 
+    /**
+     * Compress an image in the browser to WebP (EXIF is dropped by canvas),
+     * stripping metadata as requested. Falls back to JPEG on old browsers.
+     * Returns the new File ready for upload.
+     */
+    async function compressToWebp(file: File, maxDim = 2048, quality = 0.82): Promise<File> {
+      const url = URL.createObjectURL(file);
+      try {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const el = new Image();
+          el.onload = () => resolve(el);
+          el.onerror = () => reject(new Error("Invalid image"));
+          el.src = url;
+        });
+        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return file;
+        ctx.drawImage(img, 0, 0, w, h);
+        const base = file.name.replace(/\.[^.]+$/, "") || "photo";
+        const blob: Blob | null = await new Promise((resolve) => {
+          canvas.toBlob(resolve, "image/webp", quality);
+        });
+        if (blob) return new File([blob], `${base}.webp`, { type: "image/webp" });
+        const jpg: Blob | null = await new Promise((resolve) => {
+          canvas.toBlob(resolve, "image/jpeg", quality);
+        });
+        return new File([jpg || file], `${base}.jpg`, { type: "image/jpeg" });
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+
     (window as any).uploadPhotoFor = (bikeId: string) => {
       (document.getElementById("photo-bike-id") as HTMLInputElement).value = bikeId;
       photoFile.value = "";
@@ -260,7 +297,8 @@ import { BIKE_BRANDS } from "@/lib/indian-utils";
       if (!file || !bike) return;
       try {
         showToast("Uploading photo…", "info");
-        const path = await sync.uploadPhoto(bike, file);
+        const optimized = await compressToWebp(file);
+        const path = await sync.uploadPhoto(bike, optimized);
         bikeStore.update(bikeId, { photos: [...(bike.photos ?? []), path] });
         renderBikes();
         showToast("Photo uploaded", "success");

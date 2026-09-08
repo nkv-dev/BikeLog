@@ -130,21 +130,35 @@ export async function pullFromRepo(
           if (!bikes.some((b) => b.id === bike.id)) bikes.push(bike);
         }
       } else if (kind === "fuel") {
-        const e = markdownToFuel(md);
+        const e = markdownToFuel(md, slug);
         if (e) fuel.push(e);
       } else if (kind === "maintenance") {
-        const e = markdownToService(md);
+        const e = markdownToService(md, slug);
         if (e) service.push(e);
       } else if (kind === "rides") {
-        const e = markdownToRide(md);
+        const e = markdownToRide(md, slug);
         if (e) rides.push(e);
       } else if (kind === "modifications") {
-        const e = markdownToModification(md);
+        const e = markdownToModification(md, slug);
         if (e) modifications.push(e);
       } else if (kind === "checklists") {
         const e = markdownToChecklist(md);
         if (e) checklists.push(e);
       }
+    }
+
+    // Entries no longer carry bikeId in their files (folders imply the bike).
+    // Re-attach it here so pulls round-trip back into the app model.
+    const slugBike = bikes.find((b) => bikeSlug(b.name) === slug);
+    if (slugBike) {
+      const attach = (arr: { bikeId: string }[]) => {
+        for (const e of arr) if (!e.bikeId) e.bikeId = slugBike.id;
+      };
+      attach(fuel);
+      attach(service);
+      attach(rides);
+      attach(modifications);
+      attach(checklists);
     }
   }
 
@@ -179,12 +193,12 @@ export async function pushToRepo(
     const { fuel, service, rides, modifications, checklists } = byBike(bike.id);
 
     files.push({ path: `${bikeDir(slug)}/bike.md`, content: bikeToMarkdown(bike) });
-    for (const f of fuel) files.push({ path: fuelFilePath(slug, f, used), content: fuelToMarkdown(f) });
+    for (const f of fuel) files.push({ path: fuelFilePath(slug, f, used), content: fuelToMarkdown(f, slug) });
     for (const s of service)
-      files.push({ path: serviceFilePath(slug, s, used), content: serviceToMarkdown(s) });
-    for (const r of rides) files.push({ path: rideFilePath(slug, r, used), content: rideToMarkdown(r) });
+      files.push({ path: serviceFilePath(slug, s, used), content: serviceToMarkdown(s, slug) });
+    for (const r of rides) files.push({ path: rideFilePath(slug, r, used), content: rideToMarkdown(r, slug) });
     for (const m of modifications)
-      files.push({ path: modificationFilePath(slug, m, used), content: modificationToMarkdown(m) });
+      files.push({ path: modificationFilePath(slug, m, used), content: modificationToMarkdown(m, slug) });
     for (const c of checklists)
       files.push({ path: checklistFilePath(slug, c, used), content: checklistToMarkdown(c) });
   }
