@@ -31,7 +31,11 @@ export const POST = async (context: any) => {
     });
   } catch (e) {
     const status = e instanceof SyncError ? e.status : 500;
-    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), {
+    const raw = (e as Error).message;
+    const error = /Resource not accessible by integration/.test(raw)
+      ? 'GitHub App missing "Contents: Read and write" permission. Grant it in GitHub → Settings → Developer settings → your app → Permissions → Repository permissions → Contents, save, then reconnect in Settings.'
+      : raw;
+    return new Response(JSON.stringify({ ok: false, error }), {
       status,
       headers: { "Content-Type": "application/json" },
     });
