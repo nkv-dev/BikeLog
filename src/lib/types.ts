@@ -21,6 +21,7 @@ export interface FuelEntry {
   isFullTank: boolean;
   station?: string;
   notes?: string;
+  photos?: string[]; // repo-relative paths, typically one receipt per entry
 }
 
 export type ServiceType = "scheduled" | "repair" | "general" | "issue";
@@ -44,6 +45,7 @@ export interface ServiceEntry {
   status?: "reported" | "diagnosed" | "in-progress" | "resolved";
   estimatedCost?: number;
   actualCost?: number;
+  photos?: string[]; // repo-relative paths, typically one receipt per entry
 }
 
 export interface Ride {
@@ -55,6 +57,7 @@ export interface Ride {
   odometer?: number;
   avgSpeedKmh?: number;
   notes?: string;
+  photos?: string[]; // repo-relative paths, typically one receipt per entry
 }
 
 export interface Modification {
@@ -66,6 +69,7 @@ export interface Modification {
   cost?: number;
   installedBy?: string;
   notes?: string;
+  photos?: string[]; // repo-relative paths, typically one receipt per entry
 }
 
 export interface Checklist {
