@@ -12,6 +12,10 @@
   // then paste the returned ids.
   "kv_namespaces": [
     {
+      "binding": "SESSION",
+      "id": "29c35bfa63df43c9b0f048d5fa32ddd7"
+    },
+    {
       "binding": "BIKE_TOKENS",
       "id": "f3d730c53265470897adaf0e23559f4c"
     },
@@ -25,7 +29,7 @@
     "GITHUB_CLIENT_ID": "Iv23linWQBtIvSrHoB45",
     "GITHUB_APP_ID": "4867398",
     "GITHUB_REPO_NAME": "bikelog",
-    "PUBLIC_SITE_URL": "http://localhost:4321"
+    "PUBLIC_SITE_URL": "https://bikelog.nkv-dev.workers.dev"
   },
   // Store these secrets with `wrangler secret put` (never commit):
   //   GITHUB_CLIENT_SECRET   - GitHub App client secret
