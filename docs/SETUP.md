@@ -118,6 +118,19 @@ Each deploy uploads the Worker + static assets. No Pages project needed (Workers
 5. Hit **Push data** once — a `bikelog/bikes/<slug>/bike.md` + `bikelog/README.md` appear in your repo. Afterwards auto-sync keeps GitHub mirrored (5s after each change); the header sync button forces a push.
 6. Edit something and use **Pull data** on another device to fetch it.
 
+### Troubleshooting
+
+- **Push fails with `403 "Resource not accessible by integration"`** on `/git/blobs` →
+  the GitHub App is missing the **Contents: Read and write** repository permission
+  (for GitHub App user tokens the OAuth `scope` parameter is ignored; the token only
+  gets what the App's dashboard grants). Fix in GitHub → Settings → Developer settings →
+  your App → **Permissions → Repository permissions → Contents: Read and write** → save,
+  then **re-connect** in Settings → GitHub Sync.
+- **Push fails with `409 "Git Repository is empty"`** → the selected repo has no commits.
+  BikeLog now bootstraps empty repos automatically (creates the default branch on first push);
+  just push again.
+- **Pull returns nothing on a fresh repo** → normal; there is no data until the first push.
+
 Photos upload to `bikelog/bikes/<bike-slug>/media/` and are served back through the authenticated `/api/sync/media` endpoint (so even private repos work).
 
 ---

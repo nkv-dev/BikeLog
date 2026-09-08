@@ -49,7 +49,6 @@ export const GET = async (context: any) => {
   const params = new URLSearchParams({
     client_id: env.GITHUB_CLIENT_ID,
     redirect_uri: redirectUri,
-    scope: "repo user", // GitHub App user token: contents + repo creation + profile
     state,
   });
   const authorizeUrl = `https://github.com/login/oauth/authorize?${params.toString()}`;
