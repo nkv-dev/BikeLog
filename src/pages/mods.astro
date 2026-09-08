@@ -1,0 +1,210 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Modifications" activePage="mods">
+  <div class="mx-auto max-w-lg px-4 py-4">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Modifications</h1>
+        <p class="k-label mt-0.5">Upgrades & custom parts</p>
+      </div>
+      <button id="add-mod-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Add Mod
+      </button>
+    </div>
+
+    <div id="no-bike-msg" class="hidden rounded-xl border border-border bg-card p-8 text-center">
+      <p class="text-sm text-muted-foreground">Select a bike first to view modifications.</p>
+      <a href="/bikes" class="mt-2 inline-block text-sm font-medium text-primary hover:underline">Add a bike</a>
+    </div>
+
+    <div id="mods-list" class="space-y-3" aria-live="polite"></div>
+  </div>
+
+  <div id="mod-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="mod-dialog-title" tabindex="-1">
+    <div class="fixed inset-0 bg-black/50" id="mod-dialog-overlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
+      <div class="mx-auto max-w-lg">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="mod-dialog-title" class="text-lg font-bold">Log Modification</h2>
+          <button id="close-mod-dialog" aria-label="Close dialog" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <form id="mod-form" class="space-y-4">
+          <div>
+            <label for="mod-title" class="mb-1 block text-sm font-medium">Modification</label>
+            <input type="text" id="mod-title" required placeholder="e.g. LED headlamp upgrade" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="mod-date" class="mb-1 block text-sm font-medium">Date</label>
+              <input type="date" id="mod-date" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label for="mod-cost" class="mb-1 block text-sm font-medium">Cost (₹)</label>
+              <input type="number" id="mod-cost" min="0" placeholder="3200" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+          <div>
+            <label for="mod-desc" class="mb-1 block text-sm font-medium">Description</label>
+            <textarea id="mod-desc" rows="2" placeholder="What changed and why..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+          </div>
+          <div>
+            <label for="mod-install" class="mb-1 block text-sm font-medium">Installed by (optional)</label>
+            <input type="text" id="mod-install" placeholder="Self, motor garage, accessories shop..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <button type="submit" class="w-full rounded-lg bg-primary py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+            Save Mod
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { bikeStore, modificationStore, settingsStore } from "@/lib/store";
+    import { generateId, formatINR, formatDate } from "@/lib/indian-utils";
+    import { showToast, confirmDialog } from "@/lib/toast";
+
+    function getActiveBikeId(): string | null {
+      return settingsStore.get().activeBikeId;
+    }
+
+    function renderEntries() {
+      const bikeId = getActiveBikeId();
+      const list = document.getElementById("mods-list");
+      const noBikeMsg = document.getElementById("no-bike-msg");
+      const addBtn = document.getElementById("add-mod-btn");
+
+      if (!bikeId) {
+        list!.classList.add("hidden");
+        noBikeMsg!.classList.remove("hidden");
+        addBtn!.classList.add("hidden");
+        return;
+      }
+
+      list!.classList.remove("hidden");
+      noBikeMsg!.classList.add("hidden");
+      addBtn!.classList.remove("hidden");
+
+      const entries = modificationStore.getByBike(bikeId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      if (entries.length === 0) {
+        list!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No modifications yet. Tap <strong>Add Mod</strong> to track upgrades on your bike.</p></div>`;
+        return;
+      }
+
+      const totalCost = entries.reduce((s, m) => s + (m.cost || 0), 0);
+
+      list!.innerHTML = `
+        <div class="flex items-center justify-between rounded-xl bg-surface-sunken px-4 py-3">
+          <p class="k-label">Total invested</p>
+          <p class="k-stat text-lg font-bold text-card-foreground">${formatINR(totalCost)}</p>
+        </div>
+        <div class="mt-3 space-y-3">
+        ${entries
+          .map(
+            (m) => `
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="flex min-w-0 items-start gap-3">
+              <span class="k-entry-dot bg-teal-500" aria-hidden="true"></span>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center rounded-full bg-teal-100 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-teal-800 dark:bg-teal-900 dark:text-teal-300">Mod</span>
+                  <p class="k-entry-mono">${formatDate(m.date)}</p>
+                </div>
+                <p class="k-entry-title mt-1 truncate">${m.title}</p>
+                ${m.description ? `<p class="k-entry-sub mt-0.5 line-clamp-2">${m.description}</p>` : ""}
+                ${m.installedBy ? `<p class="k-entry-sub mt-0.5">${m.installedBy}</p>` : ""}
+              </div>
+            </div>
+            <div class="flex shrink-0 items-start gap-1">
+              <p class="k-stat text-base font-semibold text-card-foreground">${formatINR(m.cost || 0)}</p>
+              <button onclick="deleteMod('${m.id}')" aria-label="Delete this modification" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>`
+          )
+          .join("")}
+        </div>`;
+    }
+
+    const dialog = document.getElementById("mod-dialog")!;
+    const overlay = document.getElementById("mod-dialog-overlay")!;
+    const form = document.getElementById("mod-form") as HTMLFormElement;
+    let lastFocused: HTMLElement | null = null;
+
+    function openDialog() {
+      const bikeId = getActiveBikeId();
+      if (!bikeId) {
+        showToast("Please add and select a bike first.", "error");
+        window.location.href = "/bikes";
+        return;
+      }
+      lastFocused = document.activeElement as HTMLElement;
+      dialog.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      (document.getElementById("mod-date") as HTMLInputElement).value = new Date().toISOString().split("T")[0];
+      (document.getElementById("mod-title") as HTMLInputElement).focus();
+    }
+
+    function closeDialog() {
+      dialog.classList.add("hidden");
+      document.body.style.overflow = "";
+      form.reset();
+      if (lastFocused) lastFocused.focus();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dialog.classList.contains("hidden")) {
+        e.preventDefault();
+        closeDialog();
+      }
+    });
+
+    document.getElementById("add-mod-btn")!.onclick = openDialog;
+    document.getElementById("close-mod-dialog")!.onclick = closeDialog;
+    overlay.onclick = closeDialog;
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const bikeId = getActiveBikeId();
+      if (!bikeId) {
+        showToast("Please select a bike first.", "error");
+        return;
+      }
+
+      const entry = {
+        id: generateId(),
+        bikeId,
+        date: (document.getElementById("mod-date") as HTMLInputElement).value,
+        title: (document.getElementById("mod-title") as HTMLInputElement).value,
+        description: (document.getElementById("mod-desc") as HTMLTextAreaElement).value || undefined,
+        cost: parseInt((document.getElementById("mod-cost") as HTMLInputElement).value) || undefined,
+        installedBy: (document.getElementById("mod-install") as HTMLInputElement).value || undefined,
+      };
+
+      modificationStore.add(entry);
+      closeDialog();
+      renderEntries();
+      showToast("Mod saved");
+    };
+
+    (window as any).deleteMod = (id: string) => {
+      confirmDialog("Delete this modification?", () => {
+        modificationStore.remove(id);
+        renderEntries();
+        showToast("Mod deleted", "info");
+      });
+    };
+
+    renderEntries();
+  </script>
+</BaseLayout>

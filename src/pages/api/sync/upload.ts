@@ -1,6 +1,6 @@
 import { currentLogin, makeEnv } from "@/lib/auth";
 import { getUserAccessToken, getSelectedRepo, uploadPhoto } from "@/lib/github";
-import { bikeSlug } from "@/lib/mdstore";
+import { bikeMediaPath, bikeSlug } from "@/lib/mdstore";
 
 export const POST = async (context: any) => {
   const env = makeEnv();
@@ -42,7 +42,7 @@ export const POST = async (context: any) => {
 
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
   const ts = Date.now();
-  const path = `bikelog/assets/${bikeSlug(bikeName)}/photo-${ts}.${ext}`;
+  const path = bikeMediaPath(bikeSlug(bikeName), `photo-${ts}.${ext}`);
   const bytes = new Uint8Array(await file.arrayBuffer());
 
   try {

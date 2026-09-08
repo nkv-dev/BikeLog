@@ -1,12 +1,24 @@
-import type { Bike, FuelEntry, ServiceEntry, IssueEntry, AppSettings } from "./types";
+import type { Bike, FuelEntry, ServiceEntry, Ride, Modification, Checklist, AppSettings, IssueEntry } from "./types";
 
 const KEYS = {
   BIKES: "bikelog_bikes",
   FUEL: "bikelog_fuel",
   SERVICE: "bikelog_service",
-  ISSUES: "bikelog_issues",
+  RIDES: "bikelog_rides",
+  MODS: "bikelog_modifications",
+  CHECKLISTS: "bikelog_checklists",
   SETTINGS: "bikelog_settings",
+  LEGACY_ISSUES: "bikelog_issues",
+  MIGRATED: "bikelog_migrated_issues",
 } as const;
+
+const DATA_CHANGED = "bikelog:data-changed";
+
+/** Fired (browser only) after any local data mutation so auto-sync can react. */
+function notifyChanged(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(DATA_CHANGED));
+}
 
 function getAll<T>(key: string): T[] {
   if (typeof window === "undefined") return [];
@@ -31,6 +43,7 @@ function add<T extends { id: string }>(key: string, item: T): void {
   const items = getAll<T>(key);
   items.push(item);
   setAll(key, items);
+  notifyChanged();
 }
 
 function update<T extends { id: string }>(key: string, id: string, updates: Partial<T>): void {
@@ -39,6 +52,7 @@ function update<T extends { id: string }>(key: string, id: string, updates: Part
   if (idx !== -1) {
     items[idx] = { ...items[idx], ...updates };
     setAll(key, items);
+    notifyChanged();
   }
 }
 
@@ -48,6 +62,43 @@ function remove(key: string, id: string): void {
     key,
     items.filter((item) => item.id !== id)
   );
+  notifyChanged();
+}
+
+/**
+ * One-time migration: legacy `bikelog_issues` (IssueEntry) became maintenance
+ * entries with type "issue". Runs lazily so existing localStorage carries over.
+ */
+export function migrateLegacyIssues(): void {
+  if (typeof window === "undefined") return;
+  if (localStorage.getItem(KEYS.MIGRATED)) return;
+  try {
+    const legacy = getAll<IssueEntry>(KEYS.LEGACY_ISSUES);
+    if (legacy.length > 0) {
+      const service = getAll<ServiceEntry>(KEYS.SERVICE);
+      const issues: ServiceEntry[] = legacy.map((i) => ({
+        id: i.id,
+        bikeId: i.bikeId,
+        date: i.date,
+        odometer: i.odometer,
+        type: "issue",
+        items: [],
+        cost: i.actualCost ?? i.estimatedCost ?? 0,
+        title: i.title,
+        description: i.description,
+        severity: i.severity,
+        status: i.status,
+        estimatedCost: i.estimatedCost,
+        actualCost: i.actualCost,
+        notes: i.notes,
+      }));
+      setAll(KEYS.SERVICE, [...service, ...issues]);
+    }
+    localStorage.removeItem(KEYS.LEGACY_ISSUES);
+  } catch {
+    // Leave legacy data in place; don't block the app.
+  }
+  localStorage.setItem(KEYS.MIGRATED, new Date().toISOString());
 }
 
 // Bikes
@@ -69,7 +120,7 @@ export const fuelStore = {
   remove: (id: string) => remove(KEYS.FUEL, id),
 };
 
-// Service Entries
+// Service Entries (maintenance + repairs + issues)
 export const serviceStore = {
   getAll: () => getAll<ServiceEntry>(KEYS.SERVICE),
   getByBike: (bikeId: string) => getAll<ServiceEntry>(KEYS.SERVICE).filter((e) => e.bikeId === bikeId),
@@ -79,14 +130,34 @@ export const serviceStore = {
   remove: (id: string) => remove(KEYS.SERVICE, id),
 };
 
-// Issue Entries
-export const issueStore = {
-  getAll: () => getAll<IssueEntry>(KEYS.ISSUES),
-  getByBike: (bikeId: string) => getAll<IssueEntry>(KEYS.ISSUES).filter((e) => e.bikeId === bikeId),
-  getById: (id: string) => getById<IssueEntry>(KEYS.ISSUES, id),
-  add: (entry: IssueEntry) => add(KEYS.ISSUES, entry),
-  update: (id: string, updates: Partial<IssueEntry>) => update<IssueEntry>(KEYS.ISSUES, id, updates),
-  remove: (id: string) => remove(KEYS.ISSUES, id),
+// Rides
+export const rideStore = {
+  getAll: () => getAll<Ride>(KEYS.RIDES),
+  getByBike: (bikeId: string) => getAll<Ride>(KEYS.RIDES).filter((e) => e.bikeId === bikeId),
+  getById: (id: string) => getById<Ride>(KEYS.RIDES, id),
+  add: (entry: Ride) => add(KEYS.RIDES, entry),
+  update: (id: string, updates: Partial<Ride>) => update<Ride>(KEYS.RIDES, id, updates),
+  remove: (id: string) => remove(KEYS.RIDES, id),
+};
+
+// Modifications
+export const modificationStore = {
+  getAll: () => getAll<Modification>(KEYS.MODS),
+  getByBike: (bikeId: string) => getAll<Modification>(KEYS.MODS).filter((e) => e.bikeId === bikeId),
+  getById: (id: string) => getById<Modification>(KEYS.MODS, id),
+  add: (entry: Modification) => add(KEYS.MODS, entry),
+  update: (id: string, updates: Partial<Modification>) => update<Modification>(KEYS.MODS, id, updates),
+  remove: (id: string) => remove(KEYS.MODS, id),
+};
+
+// Checklists
+export const checklistStore = {
+  getAll: () => getAll<Checklist>(KEYS.CHECKLISTS),
+  getByBike: (bikeId: string) => getAll<Checklist>(KEYS.CHECKLISTS).filter((e) => e.bikeId === bikeId),
+  getById: (id: string) => getById<Checklist>(KEYS.CHECKLISTS, id),
+  add: (entry: Checklist) => add(KEYS.CHECKLISTS, entry),
+  update: (id: string, updates: Partial<Checklist>) => update<Checklist>(KEYS.CHECKLISTS, id, updates),
+  remove: (id: string) => remove(KEYS.CHECKLISTS, id),
 };
 
 // Settings
@@ -117,29 +188,38 @@ export const settingsStore = {
 
 // Export/Import
 export function exportAllData(): string {
+  migrateLegacyIssues();
   const data = {
     bikes: bikeStore.getAll(),
     fuel: fuelStore.getAll(),
     service: serviceStore.getAll(),
-    issues: issueStore.getAll(),
+    rides: rideStore.getAll(),
+    modifications: modificationStore.getAll(),
+    checklists: checklistStore.getAll(),
     settings: settingsStore.get(),
     exportedAt: new Date().toISOString(),
   };
   return JSON.stringify(data, null, 2);
 }
 
+export interface SyncDataFlat {
+  bikes: Bike[];
+  fuel: FuelEntry[];
+  service: ServiceEntry[];
+  rides: Ride[];
+  modifications: Modification[];
+  checklists: Checklist[];
+}
+
 /** Replace every data collection in localStorage (used after pulling from GitHub). */
-export function hydrateAll(data: {
-  bikes?: Bike[];
-  fuel?: FuelEntry[];
-  service?: ServiceEntry[];
-  issues?: IssueEntry[];
-  settings?: Partial<AppSettings>;
-}): void {
+export function hydrateAll(data: Partial<SyncDataFlat> & { settings?: Partial<AppSettings> }): void {
+  migrateLegacyIssues();
   if (data.bikes) setAll(KEYS.BIKES, data.bikes);
   if (data.fuel) setAll(KEYS.FUEL, data.fuel);
   if (data.service) setAll(KEYS.SERVICE, data.service);
-  if (data.issues) setAll(KEYS.ISSUES, data.issues);
+  if (data.rides) setAll(KEYS.RIDES, data.rides);
+  if (data.modifications) setAll(KEYS.MODS, data.modifications);
+  if (data.checklists) setAll(KEYS.CHECKLISTS, data.checklists);
   if (data.settings) settingsStore.update(data.settings);
 }
 
@@ -149,10 +229,21 @@ export function importAllData(jsonStr: string): boolean {
     if (data.bikes) setAll(KEYS.BIKES, data.bikes);
     if (data.fuel) setAll(KEYS.FUEL, data.fuel);
     if (data.service) setAll(KEYS.SERVICE, data.service);
-    if (data.issues) setAll(KEYS.ISSUES, data.issues);
+    if (data.rides) setAll(KEYS.RIDES, data.rides);
+    if (data.modifications) setAll(KEYS.MODS, data.modifications);
+    if (data.checklists) setAll(KEYS.CHECKLISTS, data.checklists);
     if (data.settings) settingsStore.update(data.settings);
+    localStorage.setItem(KEYS.MIGRATED, new Date().toISOString());
+    notifyChanged();
     return true;
   } catch {
     return false;
   }
 }
+
+export const clearAllData = () => {
+  Object.values(KEYS).forEach((k) => {
+    if (typeof window !== "undefined") localStorage.removeItem(k);
+  });
+  notifyChanged();
+};

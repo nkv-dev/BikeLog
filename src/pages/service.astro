@@ -124,7 +124,10 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       noBikeMsg!.classList.add("hidden");
       addBtn!.classList.remove("hidden");
 
-      const entries = serviceStore.getByBike(bikeId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const entries = serviceStore
+        .getByBike(bikeId)
+        .filter((e) => e.type !== "issue")
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       if (entries.length === 0) {
         list!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No service entries yet. Tap <strong>Add Entry</strong> to log your first service.</p></div>`;

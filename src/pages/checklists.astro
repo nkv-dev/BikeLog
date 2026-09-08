@@ -1,0 +1,242 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Checklists" activePage="checklists">
+  <div class="mx-auto max-w-lg px-4 py-4">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Checklists</h1>
+        <p class="k-label mt-0.5">Pre-ride & maintenance lists</p>
+      </div>
+      <button id="add-checklist-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        New List
+      </button>
+    </div>
+
+    <div id="no-bike-msg" class="hidden rounded-xl border border-border bg-card p-8 text-center">
+      <p class="text-sm text-muted-foreground">Select a bike first to create checklists.</p>
+      <a href="/bikes" class="mt-2 inline-block text-sm font-medium text-primary hover:underline">Add a bike</a>
+    </div>
+
+    <div id="checklists-list" class="space-y-3" aria-live="polite"></div>
+  </div>
+
+  <div id="checklist-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="checklist-dialog-title" tabindex="-1">
+    <div class="fixed inset-0 bg-black/50" id="checklist-dialog-overlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
+      <div class="mx-auto max-w-lg">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="checklist-dialog-title" class="text-lg font-bold">New Checklist</h2>
+          <button id="close-checklist-dialog" aria-label="Close dialog" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <form id="checklist-form" class="space-y-4">
+          <div>
+            <label for="checklist-name" class="mb-1 block text-sm font-medium">Checklist name</label>
+            <input type="text" id="checklist-name" required placeholder="Pre-ride check, Long trip..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div>
+            <label for="checklist-items" class="mb-1 block text-sm font-medium">Items (one per line)</label>
+            <textarea id="checklist-items" required rows="6" placeholder={"Helmet & gloves\nAir pressure\nChain lube\nMirrors aligned"} class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+            <p class="k-label mt-1">Each line becomes a checkable item.</p>
+          </div>
+          <button type="submit" class="w-full rounded-lg bg-primary py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+            Save Checklist
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="check-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="check-dialog-title" tabindex="-1">
+    <div class="fixed inset-0 bg-black/50" id="check-dialog-overlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
+      <div class="mx-auto max-w-lg">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="check-dialog-title" class="text-lg font-bold">Run checklist</h2>
+          <button id="close-check-dialog" aria-label="Close dialog" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div id="check-items" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { checklistStore, settingsStore } from "@/lib/store";
+    import { generateId, formatDate } from "@/lib/indian-utils";
+    import { showToast, confirmDialog } from "@/lib/toast";
+
+    function getActiveBikeId(): string | null {
+      return settingsStore.get().activeBikeId;
+    }
+
+    let activeChecklist: string | null = null;
+
+    function renderEntries() {
+      const bikeId = getActiveBikeId();
+      const list = document.getElementById("checklists-list");
+      const noBikeMsg = document.getElementById("no-bike-msg");
+      const addBtn = document.getElementById("add-checklist-btn");
+
+      if (!bikeId) {
+        list!.classList.add("hidden");
+        noBikeMsg!.classList.remove("hidden");
+        addBtn!.classList.add("hidden");
+        return;
+      }
+
+      list!.classList.remove("hidden");
+      noBikeMsg!.classList.add("hidden");
+      addBtn!.classList.remove("hidden");
+
+      const lists = checklistStore.getByBike(bikeId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      if (lists.length === 0) {
+        list!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No checklists yet. Tap <strong>New List</strong> to create a pre-ride checklist.</p></div>`;
+        return;
+      }
+
+      list!.innerHTML = lists
+        .map(
+          (c) => `
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="min-w-0 flex-1 cursor-pointer" onclick="openCheck('${c.id}')">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">${c.items.length} items</span>
+                <p class="k-entry-mono">${formatDate(c.createdAt)}</p>
+              </div>
+              <p class="k-entry-title mt-1 truncate">${c.name}</p>
+              <p class="k-entry-sub mt-0.5 text-primary">Tap to run →</p>
+            </div>
+            <div class="flex shrink-0 items-start gap-1">
+              <button onclick="runChecklist('${c.id}')" aria-label="Run checklist: ${c.name}" class="rounded-lg p-2 text-primary transition-colors hover:bg-primary/10 active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              </button>
+              <button onclick="deleteChecklist('${c.id}')" aria-label="Delete checklist" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>`
+        )
+        .join("");
+    }
+
+    (window as any).runChecklist = (id: string) => {
+      const bikeId = getActiveBikeId();
+      if (!bikeId) return;
+      activeChecklist = id;
+      const c = checklistStore.getById(id);
+      if (!c) return;
+      const container = document.getElementById("check-items")!;
+      container.innerHTML = c.items
+        .map(
+          (item) => `
+        <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <input type="checkbox" class="h-5 w-5 rounded border-input text-primary focus:ring-primary" />
+          <span class="text-sm">${item}</span>
+        </label>`
+        )
+        .join("");
+      document.getElementById("check-dialog-title")!.textContent = c.name;
+      document.getElementById("check-dialog")!.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      showToast(`Run "${c.name}"`, "info");
+    };
+
+    (window as any).openCheck = (id: string) => (window as any).runChecklist(id);
+
+    const closeCheck = () => {
+      document.getElementById("check-dialog")!.classList.add("hidden");
+      document.body.style.overflow = "";
+      activeChecklist = null;
+      showToast("Checklist complete — ride safe!", "success");
+    };
+    document.getElementById("close-check-dialog")!.onclick = closeCheck;
+    document.getElementById("check-dialog-overlay")!.onclick = closeCheck;
+
+    const dialog = document.getElementById("checklist-dialog")!;
+    const overlay = document.getElementById("checklist-dialog-overlay")!;
+    const form = document.getElementById("checklist-form") as HTMLFormElement;
+    let lastFocused: HTMLElement | null = null;
+
+    function openDialog() {
+      const bikeId = getActiveBikeId();
+      if (!bikeId) {
+        showToast("Please add and select a bike first.", "error");
+        window.location.href = "/bikes";
+        return;
+      }
+      lastFocused = document.activeElement as HTMLElement;
+      dialog.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      (document.getElementById("checklist-name") as HTMLInputElement).focus();
+    }
+
+    function closeDialog() {
+      dialog.classList.add("hidden");
+      document.body.style.overflow = "";
+      form.reset();
+      if (lastFocused) lastFocused.focus();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dialog.classList.contains("hidden")) {
+        e.preventDefault();
+        closeDialog();
+      }
+    });
+
+    document.getElementById("add-checklist-btn")!.onclick = openDialog;
+    document.getElementById("close-checklist-dialog")!.onclick = closeDialog;
+    overlay.onclick = closeDialog;
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const bikeId = getActiveBikeId();
+      if (!bikeId) {
+        showToast("Please select a bike first.", "error");
+        return;
+      }
+
+      const name = (document.getElementById("checklist-name") as HTMLInputElement).value.trim();
+      const items = (document.getElementById("checklist-items") as HTMLTextAreaElement).value
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (items.length === 0) {
+        showToast("Add at least one item.", "error");
+        return;
+      }
+
+      checklistStore.add({
+        id: generateId(),
+        bikeId,
+        name,
+        items,
+        createdAt: new Date().toISOString(),
+      });
+      closeDialog();
+      renderEntries();
+      showToast("Checklist saved");
+    };
+
+    (window as any).deleteChecklist = (id: string) => {
+      confirmDialog("Delete this checklist?", () => {
+        checklistStore.remove(id);
+        renderEntries();
+        showToast("Checklist deleted", "info");
+      });
+    };
+
+    renderEntries();
+  </script>
+</BaseLayout>

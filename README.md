@@ -9,10 +9,13 @@ Mobile-first web app for Indian bikers to track mileage, fuel, servicing, repair
 - **Dashboard** — Total km, average mileage (km/l), monthly spend, recent activity, count-up stat readouts, quick actions
 - **Fuel Log** — Track fill-ups, auto-calc mileage and costs in ₹
 - **Service Log** — Record scheduled maintenance, repairs, and costs
-- **Issues & Repairs** — Log problems with severity/status tracking
+- **Issues & Repairs** — Log problems with severity/status tracking (folded into maintenance)
+- **Ride Log** — Trip tracking: route, distance, avg speed
+- **Modifications** — Track upgrades and custom parts with cost
+- **Checklists** — Reusable pre-ride / maintenance templates with run mode
 - **Bike Profiles** — Manage multiple bikes, switch active bike
-- **GitHub Sync** — Sign in with GitHub, pick a repo, and push/pull your data as Markdown
-- **Photos** — Attach bike photos (stored in your repo under `bikelog/assets/`)
+- **GitHub Sync + auto-sync** — Sign in with GitHub, pick a repo; every change auto-pushes as Markdown (5s debounce), with a manual button in the header
+- **Photos** — Attach bike photos (stored in your repo under `bikelog/bikes/<slug>/media/`)
 - **Brand accents** — Per-brand accent themes with auto + manual override
 - **Dark / light mode** — Starwind UI theme toggle
 - **Data export/import** — JSON backup and restore
@@ -33,7 +36,7 @@ Mobile-first web app for Indian bikers to track mileage, fuel, servicing, repair
 Two layers, same data:
 
 1. **localStorage** (`bikelog_*`) — offline cache, what the UI reads/writes.
-2. **Your GitHub repo** — `bikelog/README.md` (index) + `bikelog/bikes/<slug>.md` (per bike) + `bikelog/assets/<slug>/` (photos).
+2. **Your GitHub repo** — `bikelog/README.md` (index) + one Markdown file per bike/entry under `bikelog/bikes/<slug>/` (bike.md, fuel/, maintenance/, rides/, modifications/, checklists/) + `media/` (photos).
 
 Format is strict but human-readable so you can also edit it on GitHub. See [docs/DATA.md](docs/DATA.md).
 
