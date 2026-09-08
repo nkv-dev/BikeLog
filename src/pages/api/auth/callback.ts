@@ -24,11 +24,13 @@ export const GET = async (context: any) => {
     });
 
   // GitHub App installation just completed: GitHub redirects to the app's
-  // post-installation URL (our callback) with setup_action=install and no
-  // OAuth code/state. Resume the OAuth flow so the user gets code+state.
+  // post-installation URL (our callback) with setup_action=install and an
+  // installation_id. It may also include a code, but never a valid state
+  // (CSRF check would fail). Resume the OAuth flow so the user gets a
+  // proper code+state from the (now completed) installation.
   const setupAction = url.searchParams.get("setup_action");
   const installationId = url.searchParams.get("installation_id");
-  if (!code && (setupAction === "install" || installationId)) {
+  if (setupAction === "install" || (installationId && !state)) {
     return new Response(null, { status: 302, headers: { Location: "/api/auth/connect" } });
   }
 

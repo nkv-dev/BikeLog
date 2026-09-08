@@ -305,21 +305,37 @@ export async function commitFiles(
   env: GitHubEnv,
   full: string,
   token: string,
-  files: { path: string; content: string }[],
+  files: { path: string; content: string | Uint8Array }[],
   message = "Update via BikeLog"
 ): Promise<void> {
+  if (files.length === 0) return;
   const defaultBranch = await getDefaultBranch(full, token);
-  const headSha = await getHeadShaOrNull(full, token, defaultBranch);
+  let headSha = await getHeadShaOrNull(full, token, defaultBranch);
+
+  // Empty repo (no commits, no refs): the entire Git Data API returns 409
+  // "Git Repository is empty" until the first commit exists. Bootstrap via
+  // the Contents API (PUT /contents/{path}) which auto-creates the initial
+  // commit + default branch, then bulk-commit the remaining files on top.
+  let remaining = files;
+  if (!headSha) {
+    const first = files[0];
+    await ghFetch<{ commit: { sha: string } }>(`/repos/${full}/contents/${first.path}`, token, {
+      method: "PUT",
+      body: JSON.stringify({ message, content: b64(first.content) }),
+    });
+    headSha = await getHeadShaOrNull(full, token, defaultBranch);
+    if (!headSha) return; // repo still not initialized; stop to avoid corruption
+    remaining = files.slice(1);
+    if (remaining.length === 0) return; // bootstrap file is the whole commit
+  }
 
   const entries: GHTreeEntry[] = [];
-  if (headSha) {
-    const tree = await ghFetch<{ tree: GHTreeEntry[] }>(`/repos/${full}/git/trees/${headSha}`, token);
-    entries.push(...tree.tree);
-  }
-  for (const f of files) {
+  const tree = await ghFetch<{ tree: GHTreeEntry[] }>(`/repos/${full}/git/trees/${headSha}`, token);
+  entries.push(...tree.tree);
+  for (const f of remaining) {
     const blob = await ghFetch<{ sha: string }>(`/repos/${full}/git/blobs`, token, {
       method: "POST",
-      body: JSON.stringify({ content: f.content, encoding: "base64" }),
+      body: JSON.stringify({ content: b64(f.content), encoding: "base64" }),
     });
     const idx = entries.findIndex((e) => e.path === f.path);
     if (idx !== -1) {
@@ -331,24 +347,16 @@ export async function commitFiles(
 
   const newTree = await ghFetch<{ sha: string }>(`/repos/${full}/git/trees`, token, {
     method: "POST",
-    body: JSON.stringify({ ...(headSha ? { base_tree: headSha } : {}), tree: entries }),
+    body: JSON.stringify({ base_tree: headSha, tree: entries }),
   });
   const commit = await ghFetch<{ sha: string }>(`/repos/${full}/git/commits`, token, {
     method: "POST",
-    body: JSON.stringify({ message, tree: newTree.sha, parents: headSha ? [headSha] : [] }),
+    body: JSON.stringify({ message, tree: newTree.sha, parents: [headSha] }),
   });
-  if (headSha) {
-    await ghFetch(`/repos/${full}/git/refs/heads/${defaultBranch}`, token, {
-      method: "PATCH",
-      body: JSON.stringify({ sha: commit.sha, force: false }),
-    });
-  } else {
-    // Empty repo: create the default branch with the initial commit.
-    await ghFetch(`/repos/${full}/git/refs`, token, {
-      method: "POST",
-      body: JSON.stringify({ ref: `refs/heads/${defaultBranch}`, sha: commit.sha }),
-    });
-  }
+  await ghFetch(`/repos/${full}/git/refs/heads/${defaultBranch}`, token, {
+    method: "PATCH",
+    body: JSON.stringify({ sha: commit.sha, force: false }),
+  });
 }
 
 async function getDefaultBranch(full: string, token: string): Promise<string> {
@@ -387,7 +395,7 @@ export async function uploadPhoto(
   bytes: Uint8Array,
   message = "Add photo via BikeLog"
 ): Promise<string> {
-  await commitFiles(env, full, token, [{ path, content: b64(bytes) }], message);
+  await commitFiles(env, full, token, [{ path, content: bytes }], message);
   return path;
 }
 
