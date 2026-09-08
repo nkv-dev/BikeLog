@@ -261,7 +261,9 @@ AppSettings   { activeBikeId: string|null, theme: "light"|"dark"|"system", accen
 - **Token store (KV):** keys `gh:<login>`; TTL 8h (GitHub App user tokens) + auto-refresh via
   refresh token (`refreshUserToken`). `getUserAccessToken` returns a valid/refreshed token.
 - **Selected repo (KV):** key `bikelog_repo:<login>` → `<owner>/<repo>`.
-- `fetchUser`, `listUserRepos` (paged, filters out forks, includes private + collaborator).
+- `fetchUser`, `listUserRepos` (via `/user/installations` → per-installation repos so **private
+  repos** show under App user tokens — `/user/repos` alone only returns public repos for `ghu_`
+  tokens; falls back + dedupes with `/user/repos`, filters out forks).
 - `listRepo`, `readTextFile`, `writeTextFile` (Contents API, uses sha for update),
   `readBinaryFile` (raw), `deleteFile`.
 - **`commitFiles`** — Git Data API bulk commit (blobs → tree → commit → update/create ref).
