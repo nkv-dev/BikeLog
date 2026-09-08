@@ -13,17 +13,17 @@
   "kv_namespaces": [
     {
       "binding": "BIKE_TOKENS",
-      "id": "REPLACE_WITH_KV_TOKEN_NAMESPACE_ID"
+      "id": "f3d730c53265470897adaf0e23559f4c"
     },
     {
       "binding": "BIKE_SESSIONS",
-      "id": "REPLACE_WITH_KV_SESSION_NAMESPACE_ID"
+      "id": "2e471e66d01e46b9a93149421c0cdb21"
     }
   ],
   // Non-secret GitHub App configuration (safe to commit).
   "vars": {
-    "GITHUB_CLIENT_ID": "REPLACE_WITH_GITHUB_CLIENT_ID",
-    "GITHUB_APP_ID": "REPLACE_WITH_GITHUB_APP_ID",
+    "GITHUB_CLIENT_ID": "Iv23linWQBtIvSrHoB45",
+    "GITHUB_APP_ID": "4867398",
     "GITHUB_REPO_NAME": "bikelog",
     "PUBLIC_SITE_URL": "http://localhost:4321"
   },
