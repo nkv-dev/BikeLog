@@ -122,7 +122,9 @@ export async function pullFromRepo(
     for (const f of mdFiles) {
       const md = await readTextFile(env, repo, token, f).catch(() => null);
       if (!md) continue;
-      const kind = f.split("/").slice(0, -1).pop(); // bike|fuel|maintenance|rides|modifications|checklists
+      const fileName = f.slice(f.lastIndexOf("/") + 1);
+      // bikelog/bikes/<slug>/bike.md -> "bike" (the slug is NOT the kind!)
+      const kind = fileName === "bike.md" ? "bike" : f.split("/").slice(0, -1).pop();
       if (kind === "bike") {
         const bike = markdownToBike(md);
         if (bike) {
