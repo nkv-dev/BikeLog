@@ -87,14 +87,18 @@ Note the space in the parent path — always quote paths when using shell comman
 | `a040bfe` | 2026-09-08 | merge: bootstrap empty-repo pushes into main |
 | `224fd7e` | 2026-09-08 | fix: dialogs above bottom nav; replace sync toggle with push/pull arrows ← **fix/mobile-nav-sync-buttons** |
 | `47315cf` | 2026-09-08 | merge: mobile nav + push/pull sync buttons into main |
-| ← **feat/open-source-mit** | current | open-source release: MIT LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CI + templates, package.json → 0.1.0, private-repo hardening, docs/USAGE.md |
+| `30459af` | 2026-09-08 | merge: open-source release (MIT, docs, private-repo support) into main |
+| `b51f76a` | 2026-09-08 | merge: private repos now show in the data-repo picker ← **fix/private-repos-in-list** |
+| `7ece25b` | 2026-09-08 | merge: fix pull so a second device shows data pushed from another phone ← **fix/pull-bike-kind** |
 
 ### Branch map (local + remote)
 
 | Branch | Purpose / content | Last commit |
 |---|---|---|
-| `main` ← current (deploy target) | Integration branch | `47315cf` |
-| `feat/open-source-mit` | Open-source release + private-repo hardening (this work) | current |
+| `main` ← current (deploy target) | Integration branch | `7ece25b` |
+| `fix/pull-bike-kind` | Pull skipped `bike.md` profiles → bikes/entries invisible on fresh device | `bfb5006` |
+| `fix/private-repos-in-list` | Private repos now appear in the picker (´ghu_` tokens) | `94003f4` |
+| `feat/open-source-mit` | Open-source release + private-repo hardening | `44a4b67` |
 | `fix/mobile-nav-sync-buttons` | Bottom-nav/dialog overlap fix; header ↑ push / ↓ pull buttons | `224fd7e` |
 | `develop` | Premium "garage-ledger" redesign iteration | `d82ec0b` |
 | `themes` | Bike-brand accent theme system | `9635e99` |
@@ -263,8 +267,7 @@ AppSettings   { activeBikeId: string|null, theme: "light"|"dark"|"system", accen
 - **Selected repo (KV):** key `bikelog_repo:<login>` → `<owner>/<repo>`.
 - `fetchUser`, `listUserRepos` (via `/user/installations` → per-installation repos so **private
   repos** show under App user tokens — `/user/repos` alone only returns public repos for `ghu_`
-  tokens; falls back + dedupes with `/user/repos`, filters out forks).
-- `listRepo`, `readTextFile`, `writeTextFile` (Contents API, uses sha for update),
+  tokens; falls back + dedupes with `/user/repos`, filters out forks). `listRepo`, `readTextFile`, `writeTextFile` (Contents API, uses sha for update),
   `readBinaryFile` (raw), `deleteFile`.
 - **`commitFiles`** — Git Data API bulk commit (blobs → tree → commit → update/create ref).
   **Handles empty repos** (no head ref → creates the default branch with the initial commit).
