@@ -29,5 +29,11 @@
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
   }
 }
