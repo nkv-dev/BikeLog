@@ -5,8 +5,11 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 <BaseLayout title="Service Log" activePage="service">
   <div class="mx-auto max-w-lg px-4 py-4">
     <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-xl font-bold">Service Log</h1>
-      <button id="add-service-btn" class="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Service Log</h1>
+        <p class="k-label mt-0.5">Maintenance history</p>
+      </div>
+      <button id="add-service-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Add Entry
       </button>
@@ -14,7 +17,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
     <div id="no-bike-msg" class="hidden rounded-xl border border-border bg-card p-8 text-center">
       <p class="text-sm text-muted-foreground">Select a bike first to view service entries.</p>
-      <a href="/bikes" class="mt-2 inline-block text-sm text-primary hover:underline">Add a bike</a>
+      <a href="/bikes" class="mt-2 inline-block text-sm font-medium text-primary hover:underline">Add a bike</a>
     </div>
 
     <div id="service-list" class="space-y-3" aria-live="polite"></div>
@@ -131,21 +134,24 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       list!.innerHTML = entries
         .map(
           (e) => `
-        <div class="rounded-xl border border-border bg-card p-4">
-          <div class="flex items-start justify-between">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">${e.type}</span>
-                <p class="text-xs text-muted-foreground">${formatDate(e.date)}</p>
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="flex items-start gap-3">
+              <span class="k-entry-dot bg-blue-500" aria-hidden="true"></span>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-blue-800 dark:bg-blue-900 dark:text-blue-300">${e.type}</span>
+                  <p class="k-entry-mono">${formatDate(e.date)}</p>
+                </div>
+                <p class="k-entry-title mt-1">${formatOdometer(e.odometer)}</p>
+                <p class="k-entry-sub mt-0.5">${e.items.join(", ") || "General service"}</p>
+                ${e.workshop ? `<p class="k-entry-sub">${e.workshop}</p>` : ""}
+                ${e.nextServiceKm ? `<p class="k-entry-sub mt-0.5 font-medium text-primary">Next at ${e.nextServiceKm.toLocaleString("en-IN")} km</p>` : ""}
               </div>
-              <p class="mt-1 font-semibold">${formatOdometer(e.odometer)}</p>
-              <p class="text-sm text-muted-foreground">${e.items.join(", ") || "General service"}</p>
-              ${e.workshop ? `<p class="text-xs text-muted-foreground">${e.workshop}</p>` : ""}
-              ${e.nextServiceKm ? `<p class="text-xs text-primary">Next at ${e.nextServiceKm.toLocaleString("en-IN")} km</p>` : ""}
             </div>
-            <div class="text-right">
-              <p class="font-semibold">${formatINR(e.cost)}</p>
-              <button onclick="deleteService('${e.id}')" aria-label="Delete this service entry" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+            <div class="flex items-start gap-1">
+              <p class="k-stat text-base font-semibold text-card-foreground">${formatINR(e.cost)}</p>
+              <button onclick="deleteService('${e.id}')" aria-label="Delete this service entry" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>

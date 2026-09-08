@@ -5,8 +5,11 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 <BaseLayout title="Issues" activePage="issues">
   <div class="mx-auto max-w-lg px-4 py-4">
     <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-xl font-bold">Issues & Repairs</h1>
-      <button id="add-issue-btn" class="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Issues & Repairs</h1>
+        <p class="k-label mt-0.5">What needs attention</p>
+      </div>
+      <button id="add-issue-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Report Issue
       </button>
@@ -14,7 +17,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
     <div id="no-bike-msg" class="hidden rounded-xl border border-border bg-card p-8 text-center">
       <p class="text-sm text-muted-foreground">Select a bike first to view issues.</p>
-      <a href="/bikes" class="mt-2 inline-block text-sm text-primary hover:underline">Add a bike</a>
+      <a href="/bikes" class="mt-2 inline-block text-sm font-medium text-primary hover:underline">Add a bike</a>
     </div>
 
     <div id="issues-list" class="space-y-3" aria-live="polite"></div>
@@ -128,20 +131,23 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       list!.innerHTML = entries
         .map(
           (e) => `
-        <div class="rounded-xl border border-border bg-card p-4">
-          <div class="flex items-start justify-between">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${SEVERITY_CONFIG[e.severity].color}">${SEVERITY_CONFIG[e.severity].label}</span>
-                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_CONFIG[e.status].color}">${STATUS_CONFIG[e.status].label}</span>
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="k-entry-dot ${e.status === "resolved" ? "bg-green-500" : e.severity === "high" || e.severity === "critical" ? "bg-orange-500" : "bg-blue-400"}" aria-hidden="true"></span>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${SEVERITY_CONFIG[e.severity].color}">${SEVERITY_CONFIG[e.severity].label}</span>
+                  <span class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${STATUS_CONFIG[e.status].color}">${STATUS_CONFIG[e.status].label}</span>
+                </div>
+                <p class="k-entry-title mt-1.5 truncate">${e.title}</p>
+                <p class="k-entry-mono mt-0.5">${formatOdometer(e.odometer)} · ${formatDate(e.date)}</p>
+                ${e.description ? `<p class="k-entry-sub mt-1 line-clamp-2">${e.description}</p>` : ""}
               </div>
-              <p class="mt-1 font-semibold truncate">${e.title}</p>
-              <p class="text-xs text-muted-foreground">${formatOdometer(e.odometer)} · ${formatDate(e.date)}</p>
-              ${e.description ? `<p class="mt-1 text-sm text-muted-foreground line-clamp-2">${e.description}</p>` : ""}
             </div>
-            <div class="flex items-center gap-1">
-              ${e.estimatedCost ? `<p class="text-sm font-semibold">${formatINR(e.estimatedCost)}</p>` : ""}
-              <button onclick="deleteIssue('${e.id}')" aria-label="Delete this issue" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+            <div class="flex shrink-0 flex-col items-end gap-1">
+              ${e.estimatedCost ? `<p class="k-stat text-base font-semibold text-card-foreground">${formatINR(e.estimatedCost)}</p>` : ""}
+              <button onclick="deleteIssue('${e.id}')" aria-label="Delete this issue" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
