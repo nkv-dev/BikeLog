@@ -205,7 +205,9 @@ export async function readTextFile(env: GitHubEnv, full: string, token: string, 
   if (!res.ok) throw new Error(`Read failed ${res.status} for ${path}`);
   const data = (await res.json()) as { content: string; encoding: string; sha: string };
   if (!data || data.encoding !== "base64") return null;
-  return Buffer.from(data.content, "base64").toString("utf-8");
+  const binary = atob(data.content);
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 /** Write one file via the Contents API (creates or updates). Returns commit sha. */
@@ -400,6 +402,10 @@ export async function uploadPhoto(
 }
 
 function b64(input: string | Uint8Array): string {
-  if (typeof input === "string") return Buffer.from(input, "utf-8").toString("base64");
-  return Buffer.from(input).toString("base64");
+  const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
 }
