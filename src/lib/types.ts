@@ -7,7 +7,7 @@ export interface Bike {
   odometer: number;
   fuelType: "petrol" | "diesel";
   createdAt: string;
-  photos?: string[]; // relative paths under bikelog/assets/<slug>/
+  photos?: string[]; // relative paths under bikelog/bikes/<slug>/media/bike/
 }
 
 export interface FuelEntry {
@@ -23,20 +23,60 @@ export interface FuelEntry {
   notes?: string;
 }
 
+export type ServiceType = "scheduled" | "repair" | "general" | "issue";
+
 export interface ServiceEntry {
   id: string;
   bikeId: string;
   date: string;
   odometer: number;
-  type: "scheduled" | "repair" | "general";
+  type: ServiceType;
   items: string[];
   cost: number;
   workshop?: string;
   notes?: string;
   nextServiceKm?: number;
   nextServiceDate?: string;
+  // Issue fields (only meaningful when type === "issue")
+  title?: string;
+  description?: string;
+  severity?: "low" | "medium" | "high" | "critical";
+  status?: "reported" | "diagnosed" | "in-progress" | "resolved";
+  estimatedCost?: number;
+  actualCost?: number;
 }
 
+export interface Ride {
+  id: string;
+  bikeId: string;
+  date: string;
+  route: string;
+  distanceKm: number;
+  odometer?: number;
+  avgSpeedKmh?: number;
+  notes?: string;
+}
+
+export interface Modification {
+  id: string;
+  bikeId: string;
+  date: string;
+  title: string;
+  description?: string;
+  cost?: number;
+  installedBy?: string;
+  notes?: string;
+}
+
+export interface Checklist {
+  id: string;
+  bikeId: string;
+  name: string;
+  items: string[];
+  createdAt: string;
+}
+
+// Legacy 0.0.1 issue type, kept only for migrating existing localStorage/repo data.
 export interface IssueEntry {
   id: string;
   bikeId: string;

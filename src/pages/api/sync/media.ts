@@ -1,7 +1,7 @@
 import { currentLogin, makeEnv } from "@/lib/auth";
 import { getSelectedRepo, getUserAccessToken, readBinaryFile } from "@/lib/github";
 
-/** Serve a file from the user's repo (photos live under bikelog/assets/). */
+/** Serve a file from the user's repo (photos live under bikelog/bikes/<slug>/media/). */
 export const GET = async (context: any) => {
   const env = makeEnv();
   const login = await currentLogin(env, context.request);
@@ -23,7 +23,7 @@ export const GET = async (context: any) => {
 
   const url = new URL(context.request.url);
   const path = url.searchParams.get("path") || "";
-  if (!path.startsWith("bikelog/assets/") || path.includes("..")) {
+  if (!path.startsWith("bikelog/bikes/") || !path.includes("/media/") || path.includes("..")) {
     return new Response(JSON.stringify({ ok: false, error: "Invalid path" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },

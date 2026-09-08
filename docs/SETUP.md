@@ -115,10 +115,10 @@ Each deploy uploads the Worker + static assets. No Pages project needed (Workers
 2. **Settings → GitHub Sync → Connect with GitHub**.
 3. Authorize the GitHub App.
 4. Pick an existing repo (data goes into a `bikelog/` folder; you can use a dedicated data repo or an existing one).
-5. Hit **Push data** — a `bikelog/bikes/<name>.md` + `bikelog/README.md` appear in your repo.
+5. Hit **Push data** once — a `bikelog/bikes/<slug>/bike.md` + `bikelog/README.md` appear in your repo. Afterwards auto-sync keeps GitHub mirrored (5s after each change); the header sync button forces a push.
 6. Edit something and use **Pull data** on another device to fetch it.
 
-Photos upload to `bikelog/assets/<bike-slug>/` and are served back through the authenticated `/api/sync/media` endpoint (so even private repos work).
+Photos upload to `bikelog/bikes/<bike-slug>/media/` and are served back through the authenticated `/api/sync/media` endpoint (so even private repos work).
 
 ---
 
@@ -130,5 +130,5 @@ Photos upload to `bikelog/assets/<bike-slug>/` and are served back through the a
 | User tokens | Stored in Cloudflare KV (`BIKE_TOKENS`), only reachable with the session cookie, auto-refreshed (8h expiry, refresh token) |
 | Sessions | HttpOnly, Secure, SameSite=Lax cookie + CSRF `state` check; 90-day TTL in `BIKE_SESSIONS` KV |
 | Data access | Token scoped to `repo` (read/write contents) — the app can only touch the user-selected repo they authorize |
-| Photo serving | `/api/sync/media` validates the session and path (`bikelog/assets/…`) before streaming bytes |
+| Photo serving | `/api/sync/media` validates the session and path (`bikelog/bikes/…/media/…`) before streaming bytes |
 | Repo choice | Server regex-validates `<owner>/<repo>`; only repos the token can push to are listed |

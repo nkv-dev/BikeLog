@@ -96,12 +96,18 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
   </div>
 
   <script>
-    import { bikeStore, issueStore, settingsStore } from "@/lib/store";
+    import { bikeStore, serviceStore, settingsStore } from "@/lib/store";
     import { generateId, formatINR, formatOdometer, formatDate, SEVERITY_CONFIG, STATUS_CONFIG } from "@/lib/indian-utils";
     import { showToast, confirmDialog } from "@/lib/toast";
 
     function getActiveBikeId(): string | null {
       return settingsStore.get().activeBikeId;
+    }
+
+    function getIssues() {
+      const bikeId = getActiveBikeId();
+      if (!bikeId) return [];
+      return serviceStore.getByBike(bikeId).filter((e) => e.type === "issue");
     }
 
     function renderEntries() {
@@ -121,7 +127,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       noBikeMsg!.classList.add("hidden");
       addBtn!.classList.remove("hidden");
 
-      const entries = issueStore.getByBike(bikeId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const entries = getIssues().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       if (entries.length === 0) {
         list!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No issues reported yet. Tap <strong>Report Issue</strong> if something goes wrong with your bike.</p></div>`;
@@ -137,10 +143,10 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
               <span class="k-entry-dot ${e.status === "resolved" ? "bg-green-500" : e.severity === "high" || e.severity === "critical" ? "bg-orange-500" : "bg-blue-400"}" aria-hidden="true"></span>
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${SEVERITY_CONFIG[e.severity].color}">${SEVERITY_CONFIG[e.severity].label}</span>
-                  <span class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${STATUS_CONFIG[e.status].color}">${STATUS_CONFIG[e.status].label}</span>
+                  ${e.severity ? `<span class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${SEVERITY_CONFIG[e.severity].color}">${SEVERITY_CONFIG[e.severity].label}</span>` : ""}
+                  ${e.status ? `<span class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${STATUS_CONFIG[e.status].color}">${STATUS_CONFIG[e.status].label}</span>` : ""}
                 </div>
-                <p class="k-entry-title mt-1.5 truncate">${e.title}</p>
+                <p class="k-entry-title mt-1.5 truncate">${e.title || e.items.join(", ")}</p>
                 <p class="k-entry-mono mt-0.5">${formatOdometer(e.odometer)} · ${formatDate(e.date)}</p>
                 ${e.description ? `<p class="k-entry-sub mt-1 line-clamp-2">${e.description}</p>` : ""}
               </div>
@@ -210,6 +216,9 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
         bikeId,
         date: (document.getElementById("issue-date") as HTMLInputElement).value,
         odometer: parseInt((document.getElementById("issue-odometer") as HTMLInputElement).value),
+        type: "issue" as const,
+        items: [],
+        cost: parseInt((document.getElementById("issue-actual-cost") as HTMLInputElement).value) || 0,
         title: (document.getElementById("issue-title") as HTMLInputElement).value,
         description: (document.getElementById("issue-desc") as HTMLTextAreaElement).value,
         severity: (document.getElementById("issue-severity") as HTMLSelectElement).value as "low" | "medium" | "high" | "critical",
@@ -219,19 +228,17 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
         notes: (document.getElementById("issue-notes") as HTMLTextAreaElement).value || undefined,
       };
 
-      issueStore.add(entry);
+      serviceStore.add(entry);
       closeDialog();
       renderEntries();
       showToast("Issue reported");
-      window.dispatchEvent(new Event("bikelog:data-changed"));
     };
 
     (window as any).deleteIssue = (id: string) => {
       confirmDialog("Delete this issue?", () => {
-        issueStore.remove(id);
+        serviceStore.remove(id);
         renderEntries();
         showToast("Issue deleted", "info");
-        window.dispatchEvent(new Event("bikelog:data-changed"));
       });
     };
 

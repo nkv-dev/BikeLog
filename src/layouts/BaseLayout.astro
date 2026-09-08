@@ -16,7 +16,9 @@ const navItems = [
   { id: "home", label: "Home", href: "/", icon: "home" },
   { id: "fuel", label: "Fuel", href: "/fuel", icon: "fuel" },
   { id: "service", label: "Service", href: "/service", icon: "wrench" },
-  { id: "issues", label: "Issues", href: "/issues", icon: "alert" },
+  { id: "rides", label: "Rides", href: "/rides", icon: "route" },
+  { id: "mods", label: "Mods", href: "/mods", icon: "wrench-alt" },
+  { id: "checklists", label: "Checks", href: "/checklists", icon: "checklist" },
   { id: "bikes", label: "Bikes", href: "/bikes", icon: "bike" },
 ];
 
@@ -24,7 +26,9 @@ const icons: Record<string, string> = {
   home: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   fuel: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17"/><path d="M15 10h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2v0a2 2 0 0 0 2-2V9l-3-3"/><path d="M3 22h12"/><rect x="6" y="7" width="6" height="4" rx="1"/></svg>`,
   wrench: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
-  alert: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+  "wrench-alt": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/><path d="M18 6v6"/><path d="M12 22V8a4 4 0 0 1 4-4"/><path d="M12 22H7"/><path d="M7 22v-9a2 2 0 0 1 2-2h3"/></svg>`,
+  route: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>`,
+  checklist: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/><path d="m3 6 1 1 2-2"/><path d="m3 12 1 1 2-2"/><path d="m3 18 1 1 2-2"/></svg>`,
   bike: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3.5-3.5 2-3 2 3h3"/></svg>`,
 };
 ---
@@ -120,6 +124,12 @@ const icons: Record<string, string> = {
       </div>
       <div id="bike-selector-container" class="flex items-center gap-2">
         <span class="hidden text-sm text-muted-foreground sm:inline" id="active-bike-name" aria-live="polite">No bike selected</span>
+        <button id="header-sync-btn" type="button" aria-label="Sync with GitHub" title="Sync with GitHub"
+          class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-60">
+          <svg xmlns="http://www.w3.org/2000/svg" id="header-sync-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>
+          </svg>
+        </button>
         <a href="/settings" aria-label="Settings" class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
@@ -156,6 +166,75 @@ const icons: Record<string, string> = {
     </nav>
 
     <script>
+      import { sync, github } from "@/lib/sync-client";
+
+      // ---- GitHub sync button + auto-sync ----
+      const syncBtn = document.getElementById("header-sync-btn") as HTMLButtonElement | null;
+      const syncIcon = document.getElementById("header-sync-icon") as HTMLElement | null;
+      let connected = false;
+      let pushing = false;
+      let pushTimer: ReturnType<typeof setTimeout> | null = null;
+
+      function updateSyncButton() {
+        if (!syncBtn) return;
+        if (!connected) {
+          syncBtn.disabled = true;
+          syncBtn.title = "Connect GitHub in Settings to enable syncing";
+        } else {
+          syncBtn.disabled = pushing;
+          syncBtn.title = "Sync with GitHub";
+        }
+      }
+
+      function setPushing(on: boolean) {
+        if (!syncBtn || !syncIcon) return;
+        pushing = on;
+        if (on) {
+          syncBtn.setAttribute("aria-busy", "true");
+          syncIcon.classList.add("animate-spin");
+        } else {
+          syncBtn.removeAttribute("aria-busy");
+          syncIcon.classList.remove("animate-spin");
+        }
+        updateSyncButton();
+      }
+
+      async function syncNow() {
+        if (!connected || pushing) return;
+        setPushing(true);
+        try {
+          await sync.push();
+        } catch (e) {
+          console.error("sync failed", e);
+          syncBtn?.classList.remove("text-primary");
+          syncBtn?.classList.add("text-destructive");
+          setTimeout(() => syncBtn?.classList.remove("text-destructive"), 1600);
+        } finally {
+          setPushing(false);
+        }
+      }
+
+      syncBtn?.addEventListener("click", syncNow);
+
+      // Auto-sync: debounce a push after any local data change (5s quiet period).
+      document.addEventListener("bikelog:data-changed", () => {
+        if (!connected) return;
+        clearTimeout(pushTimer as ReturnType<typeof setTimeout> | undefined);
+        pushTimer = setTimeout(syncNow, 5000);
+      });
+
+      checkConnection();
+
+      async function checkConnection() {
+        try {
+          const me = await github.me();
+          connected = me.connected;
+        } catch {
+          connected = false;
+        }
+        updateSyncButton();
+      }
+
       function normalizeBrand(brand: string): string {
         const key = String(brand || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
         const map: Record<string, string> = {

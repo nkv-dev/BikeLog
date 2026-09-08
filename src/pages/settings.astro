@@ -95,7 +95,7 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
   <input type="file" id="import-file" accept=".json" class="hidden" />
 
   <script>
-    import { exportAllData, importAllData, settingsStore } from "@/lib/store";
+    import { exportAllData, importAllData, settingsStore, clearAllData } from "@/lib/store";
     import { showToast, confirmDialog } from "@/lib/toast";
     import { ACCENT_THEME_OPTIONS } from "@/lib/brand-themes";
     import { github as githubClient, sync } from "@/lib/sync-client";
@@ -275,12 +275,8 @@ import { ThemeToggle } from "@/components/starwind/theme-toggle";
     });
 
     document.getElementById("clear-btn")!.onclick = () => {
-      confirmDialog("This will permanently delete ALL bikes, fuel, service, and issue data.", () => {
-        localStorage.removeItem("bikelog_bikes");
-        localStorage.removeItem("bikelog_fuel");
-        localStorage.removeItem("bikelog_service");
-        localStorage.removeItem("bikelog_issues");
-        localStorage.removeItem("bikelog_settings");
+      confirmDialog("This will permanently delete ALL bikes, fuel, service, ride, modification, checklist, and issue data.", () => {
+        clearAllData();
         showToast("All data cleared", "info");
         location.reload();
       });
