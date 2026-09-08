@@ -1,17 +1,218 @@
 ---
-
+import BaseLayout from "@/layouts/BaseLayout.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="Dashboard" activePage="home">
+  <div id="app" class="mx-auto max-w-lg px-4 py-4">
+    <div id="no-bike-state" class="flex flex-col items-center justify-center py-20 text-center">
+      <div class="mb-4 rounded-full bg-muted p-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground" aria-hidden="true">
+          <circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3.5-3.5 2-3 2 3h3"/>
+        </svg>
+      </div>
+      <h2 class="mb-2 text-xl font-bold">Welcome to BikeLog</h2>
+      <p class="mb-6 text-sm text-muted-foreground">Add your bike to start tracking mileage, fuel, and servicing.</p>
+      <a href="/bikes" class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
+        Add Your Bike
+      </a>
+    </div>
+
+    <div id="dashboard-content" class="hidden space-y-4">
+      <section id="hero-bike" class="reveal rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <h2 id="dash-bike-name" class="truncate text-2xl font-bold tracking-tight"></h2>
+            <p class="k-chip mt-2"><span aria-hidden="true">◆</span><span id="dash-bike-brand">—</span></p>
+          </div>
+          <button id="switch-bike-btn" class="shrink-0 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-muted active:scale-[0.97]">
+            Switch
+          </button>
+        </div>
+        <div class="mt-5 grid grid-cols-2 gap-3">
+          <div class="rounded-xl bg-surface-sunken p-4">
+            <p class="k-label">Total km</p>
+            <p id="stat-total-km" class="k-stat mt-1 text-3xl font-bold text-card-foreground">0</p>
+          </div>
+          <div class="rounded-xl bg-surface-sunken p-4">
+            <p class="k-label">Avg mileage</p>
+            <p id="stat-avg-mileage" class="k-stat mt-1 text-3xl font-bold text-card-foreground">--</p>
+            <p class="k-label mt-0.5 text-foreground/60">km/l</p>
+          </div>
+          <div class="rounded-xl bg-surface-sunken p-4">
+            <p class="k-label">Fuel spend</p>
+            <p id="stat-monthly-spend" class="k-stat mt-1 text-3xl font-bold text-card-foreground">₹0</p>
+            <p class="k-label mt-0.5 text-foreground/60">this month</p>
+          </div>
+          <div class="rounded-xl bg-surface-sunken p-4">
+            <p class="k-label">Fuel entries</p>
+            <p id="stat-fuel-count" class="k-stat mt-1 text-3xl font-bold text-card-foreground">0</p>
+            <p class="k-label mt-0.5 text-foreground/60">total</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="reveal rounded-2xl border border-border bg-card p-5 shadow-card">
+        <h3 class="mb-3 text-sm font-semibold tracking-tight">Recent Activity</h3>
+        <div id="recent-activity" class="space-y-3" aria-live="polite">
+          <p class="text-sm text-muted-foreground">No entries yet. Start logging fuel or services.</p>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-2 gap-3">
+        <a href="/fuel" class="k-action reveal" id="quick-fuel">
+          <div class="rounded-lg bg-primary/10 p-2.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+              <path d="M3 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17"/><path d="M15 10h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2v0a2 2 0 0 0 2-2V9l-3-3"/><path d="M3 22h12"/><rect x="6" y="7" width="6" height="4" rx="1"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium">Add Fuel</p>
+            <p class="k-label mt-0.5 text-foreground/50">Log a fill-up</p>
+          </div>
+        </a>
+        <a href="/service" class="k-action reveal" id="quick-service">
+          <div class="rounded-lg bg-primary/10 p-2.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium">Log Service</p>
+            <p class="k-label mt-0.5 text-foreground/50">Record maintenance</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { bikeStore, fuelStore, serviceStore } from "@/lib/store";
+    import { calculateMileage, calculateTotalKm, calculateMonthlySpend } from "@/lib/mileage";
+    import { formatINR, formatOdometer, formatDate } from "@/lib/indian-utils";
+
+    function revealOn(el: Element | null, delay = 0) {
+      if (!el || (el as HTMLElement).classList.contains("is-visible")) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || typeof IntersectionObserver === "undefined") {
+        el.classList.add("is-visible");
+        return;
+      }
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setTimeout(() => entry.target.classList.add("is-visible"), delay);
+              io.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.05 }
+      );
+      io.observe(el);
+    }
+
+    function countUp(el: HTMLElement, target: number, fmt: (n: number) => string) {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        el.textContent = fmt(target);
+        return;
+      }
+      const dur = 500;
+      const start = performance.now();
+      const from = 0;
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / dur);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = fmt(from + (target - from) * eased);
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    function renderDashboard() {
+      const settings = JSON.parse(localStorage.getItem("bikelog_settings") || "{}");
+      const bikes = bikeStore.getAll();
+
+      if (!settings.activeBikeId || bikes.length === 0) {
+        document.getElementById("no-bike-state")?.classList.remove("hidden");
+        document.getElementById("dashboard-content")?.classList.add("hidden");
+        return;
+      }
+
+      const bike = bikes.find((b) => b.id === settings.activeBikeId);
+      if (!bike) {
+        document.getElementById("no-bike-state")?.classList.remove("hidden");
+        document.getElementById("dashboard-content")?.classList.add("hidden");
+        return;
+      }
+
+      document.getElementById("no-bike-state")?.classList.add("hidden");
+      document.getElementById("dashboard-content")?.classList.remove("hidden");
+
+      const bikeName = document.getElementById("dash-bike-name");
+      if (bikeName) bikeName.textContent = bike.name;
+
+      const brandEl = document.getElementById("dash-bike-brand");
+      if (brandEl) brandEl.textContent = bike.brand || "Unknown";
+
+      const fuelEntries = fuelStore.getByBike(bike.id);
+      const serviceEntries = serviceStore.getByBike(bike.id);
+      const issueEntries = serviceEntries.filter((e) => e.type === "issue");
+
+      const totalKm = calculateTotalKm(fuelEntries);
+      const avgMileage = calculateMileage(fuelEntries);
+      const monthlySpend = calculateMonthlySpend(fuelEntries);
+
+      const totalKmEl = document.getElementById("stat-total-km");
+      const avgMileageEl = document.getElementById("stat-avg-mileage");
+      const monthlySpendEl = document.getElementById("stat-monthly-spend");
+      const fuelCountEl = document.getElementById("stat-fuel-count");
+
+      const fmtKm = (n: number) => (fuelEntries.length >= 2 ? Math.round(n).toLocaleString("en-IN") + " km" : "--");
+      if (totalKmEl) countUp(totalKmEl, totalKm, fmtKm);
+      if (avgMileageEl) avgMileageEl.textContent = avgMileage ? avgMileage.toFixed(1) : "--";
+      if (monthlySpendEl) countUp(monthlySpendEl, monthlySpend, (n) => formatINR(n));
+      if (fuelCountEl) fuelCountEl.textContent = fuelEntries.length.toString();
+
+      const recentEl = document.getElementById("recent-activity");
+      if (recentEl) {
+        const allEntries = [
+          ...fuelEntries.map((e) => ({ type: "fuel" as const, date: e.date, text: `Fuel: ${e.litres}L @ ${formatINR(e.pricePerLitre)}`, detail: formatOdometer(e.odometer) })),
+          ...serviceEntries.map((e) => ({ type: "service" as const, date: e.date, text: `Service: ${e.items.slice(0, 2).join(", ")}`, detail: formatOdometer(e.odometer) })),
+          ...issueEntries.map((e) => ({ type: "issue" as const, date: e.date, text: e.title, detail: e.status })),
+        ]
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, 5);
+
+        if (allEntries.length === 0) {
+          recentEl.innerHTML = `<p class="text-sm text-muted-foreground">No entries yet. <a href="/fuel" class="font-medium text-primary hover:underline">Log fuel</a> or <a href="/service" class="font-medium text-primary hover:underline">log a service</a> to get started.</p>`;
+        } else {
+          recentEl.innerHTML = allEntries
+            .map((e) => {
+              const colors = { fuel: "bg-green-500", service: "bg-blue-500", issue: "bg-orange-500" };
+              return `
+              <div class="flex items-center gap-3">
+                <div class="h-2 w-2 rounded-full ${colors[e.type]}"></div>
+                <div class="flex-1 min-w-0">
+                  <p class="truncate text-sm font-medium">${e.text}</p>
+                  <p class="k-entry-mono mt-0.5">${e.detail} · ${formatDate(e.date)}</p>
+                </div>
+              </div>`;
+            })
+            .join("");
+        }
+      }
+
+      [document.getElementById("hero-bike"), document.getElementById("recent-activity")?.parentElement, document.getElementById("quick-fuel"), document.getElementById("quick-service")].forEach((el, i) =>
+        revealOn(el, i * 40)
+      );
+    }
+
+    const switchBtn = document.getElementById("switch-bike-btn");
+    if (switchBtn) {
+      switchBtn.onclick = () => (window.location.href = "/bikes");
+    }
+
+    renderDashboard();
+    window.addEventListener("bikelog:data-changed", renderDashboard);
+    document.addEventListener("bikelog:data-changed", renderDashboard);
+  </script>
+</BaseLayout>
