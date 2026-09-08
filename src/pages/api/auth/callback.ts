@@ -23,6 +23,15 @@ export const GET = async (context: any) => {
       headers: { "Content-Type": "text/html" },
     });
 
+  // GitHub App installation just completed: GitHub redirects to the app's
+  // post-installation URL (our callback) with setup_action=install and no
+  // OAuth code/state. Resume the OAuth flow so the user gets code+state.
+  const setupAction = url.searchParams.get("setup_action");
+  const installationId = url.searchParams.get("installation_id");
+  if (!code && (setupAction === "install" || installationId)) {
+    return new Response(null, { status: 302, headers: { Location: "/api/auth/connect" } });
+  }
+
   // User denied / error from GitHub
   if (error) return fail(`Authorization was cancelled or failed (${error}). <a href="/settings">Go back</a>`);
   if (!code) return fail("Missing authorization code. <a href='/'>Go back</a>");
