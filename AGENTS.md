@@ -359,7 +359,7 @@ filenames via slugify; duplicate names get an `-<id5>` suffix.
 ### Sync behavior
 
 - **Auto-sync (0.0.2):** after connecting + selecting a repo, every local change auto-pushes
-  after a **5s debounce**. Header sync button forces an immediate push.
+  after a **5s debounce**. Header push (↑) button forces an immediate push; header pull (↓) button forces a pull.
 - **Push:** serializes all localStorage → per-entry `.md` + `README.md`, commits to the
   selected repo's default branch. Removes stale/legacy files.
 - **Pull:** reads all `bikelog/bikes/<slug>/**`, parses into the six collections, replaces

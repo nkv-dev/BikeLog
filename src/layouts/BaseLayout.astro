@@ -124,10 +124,16 @@ const icons: Record<string, string> = {
       </div>
       <div id="bike-selector-container" class="flex items-center gap-2">
         <span class="hidden text-sm text-muted-foreground sm:inline" id="active-bike-name" aria-live="polite">No bike selected</span>
-        <button id="header-sync-btn" type="button" aria-label="Sync with GitHub" title="Sync with GitHub"
+        <button id="header-push-btn" type="button" aria-label="Push data to GitHub" title="Push data to GitHub"
           class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-60">
-          <svg xmlns="http://www.w3.org/2000/svg" id="header-sync-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>
+          <svg xmlns="http://www.w3.org/2000/svg" id="header-push-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14"/><path d="m19 12-7-7-7 7"/>
+          </svg>
+        </button>
+        <button id="header-pull-btn" type="button" aria-label="Pull data from GitHub" title="Pull data from GitHub"
+          class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-60">
+          <svg xmlns="http://www.w3.org/2000/svg" id="header-pull-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>
           </svg>
         </button>
         <a href="/settings" aria-label="Settings" class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95">
@@ -168,59 +174,67 @@ const icons: Record<string, string> = {
     <script>
       import { sync, github } from "@/lib/sync-client";
 
-      // ---- GitHub sync button + auto-sync ----
-      const syncBtn = document.getElementById("header-sync-btn") as HTMLButtonElement | null;
-      const syncIcon = document.getElementById("header-sync-icon") as HTMLElement | null;
+      // ---- GitHub push/pull buttons + auto-sync ----
+      const pushBtn = document.getElementById("header-push-btn") as HTMLButtonElement | null;
+      const pullBtn = document.getElementById("header-pull-btn") as HTMLButtonElement | null;
+      const pushIcon = document.getElementById("header-push-icon") as HTMLElement | null;
+      const pullIcon = document.getElementById("header-pull-icon") as HTMLElement | null;
       let connected = false;
       let pushing = false;
       let pushTimer: ReturnType<typeof setTimeout> | null = null;
 
-      function updateSyncButton() {
-        if (!syncBtn) return;
-        if (!connected) {
-          syncBtn.disabled = true;
-          syncBtn.title = "Connect GitHub in Settings to enable syncing";
-        } else {
-          syncBtn.disabled = pushing;
-          syncBtn.title = "Sync with GitHub";
-        }
+      function updateSyncButtons() {
+        [pushBtn, pullBtn].forEach((btn) => {
+          if (!btn) return;
+          if (!connected) {
+            btn.disabled = true;
+            btn.title = "Connect GitHub in Settings to enable syncing";
+          } else {
+            btn.disabled = pushing;
+          }
+        });
       }
 
       function setPushing(on: boolean) {
-        if (!syncBtn || !syncIcon) return;
         pushing = on;
-        if (on) {
-          syncBtn.setAttribute("aria-busy", "true");
-          syncIcon.classList.add("animate-spin");
-        } else {
-          syncBtn.removeAttribute("aria-busy");
-          syncIcon.classList.remove("animate-spin");
-        }
-        updateSyncButton();
+        [pushIcon, pullIcon].forEach((icon) => {
+          if (!icon) return;
+          if (on) icon.classList.add("animate-spin");
+          else icon.classList.remove("animate-spin");
+        });
+        updateSyncButtons();
       }
 
-      async function syncNow() {
+      async function runSync(action: () => Promise<void>) {
         if (!connected || pushing) return;
         setPushing(true);
         try {
-          await sync.push();
+          await action();
         } catch (e) {
           console.error("sync failed", e);
-          syncBtn?.classList.remove("text-primary");
-          syncBtn?.classList.add("text-destructive");
-          setTimeout(() => syncBtn?.classList.remove("text-destructive"), 1600);
+          [pushBtn, pullBtn].forEach((btn) => {
+            btn?.classList.remove("text-primary");
+            btn?.classList.add("text-destructive");
+            setTimeout(() => btn?.classList.remove("text-destructive"), 1600);
+          });
         } finally {
           setPushing(false);
         }
       }
 
-      syncBtn?.addEventListener("click", syncNow);
+      pushBtn?.addEventListener("click", () => runSync(() => sync.push()));
+      pullBtn?.addEventListener("click", () =>
+        runSync(async () => {
+          await sync.pull();
+          window.dispatchEvent(new Event("bikelog:data-changed"));
+        })
+      );
 
       // Auto-sync: debounce a push after any local data change (5s quiet period).
       document.addEventListener("bikelog:data-changed", () => {
         if (!connected) return;
         clearTimeout(pushTimer as ReturnType<typeof setTimeout> | undefined);
-        pushTimer = setTimeout(syncNow, 5000);
+        pushTimer = setTimeout(() => runSync(() => sync.push()), 5000);
       });
 
       checkConnection();
