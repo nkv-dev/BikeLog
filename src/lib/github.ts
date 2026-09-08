@@ -149,29 +149,68 @@ export async function fetchUser(token: string): Promise<GHUser> {
   return u;
 }
 
-/** List the user's authored repos (repos they can push to). */
+/** List the user's repos the app can push to (public AND private). */
 export async function listUserRepos(token: string): Promise<GHRepo[]> {
-  const repos: GHRepo[] = [];
-  let page = 1;
-  while (page <= 5) {
-    const batch = await ghFetch<
-      (GHRepo & { owner: { login: string }; fork: boolean })[]
-    >(`/user/repos?per_page=100&page=${page}&affiliation=owner,collaborator&sort=updated`, token);
-    repos.push(...batch);
-    if (batch.length < 100) break;
-    page++;
-  }
-  // Allow any repo the user can push to (not just forks-visible), including private.
-  return repos
-    .filter((r) => !r.fork)
-    .map((r) => ({
+  const repos = new Map<string, GHRepo>();
+
+  const add = (r: GHRepo & { fork?: boolean }) => {
+    if ((r as { fork?: boolean }).fork) return;
+    repos.set(r.full_name.toLowerCase(), {
       full_name: r.full_name,
       name: r.name,
       private: r.private,
       default_branch: r.default_branch,
       permissions: r.permissions,
       updated_at: r.updated_at,
-    }));
+    });
+  };
+
+  // GitHub App user tokens can only see PRIVATE repos the app is explicitly
+  // granted via an installation. Enumerate installations, then their repos
+  // (this is the only way `/user/repos` private ones appear with a `ghu_` token).
+  try {
+    let page = 1;
+    while (page <= 5) {
+      const { installations } = await ghFetch<{ installations: { id: number }[] }>(
+        `/user/installations?per_page=100&page=${page}`,
+        token
+      );
+      for (const inst of installations ?? []) {
+        let rp = 1;
+        while (rp <= 5) {
+          const batch = await ghFetch<{ repositories: (GHRepo & { fork?: boolean })[] }>(
+            `/user/installations/${inst.id}/repositories?per_page=100&page=${rp}`,
+            token
+          );
+          for (const r of batch.repositories ?? []) add(r);
+          if ((batch.repositories ?? []).length < 100) break;
+          rp++;
+        }
+      }
+      if ((installations ?? []).length < 100) break;
+      page++;
+    }
+  } catch {
+    // fall through to public-only listing below
+  }
+
+  // Fallback / supplement with the plain listing (covers public repos the app
+  // can reach without an installation, and non-App tokens).
+  try {
+    let page = 1;
+    while (page <= 5) {
+      const batch = await ghFetch<
+        (GHRepo & { owner: { login: string }; fork?: boolean })[]
+      >(`/user/repos?per_page=100&page=${page}&affiliation=owner,collaborator&sort=updated`, token);
+      for (const r of batch) add(r);
+      if (batch.length < 100) break;
+      page++;
+    }
+  } catch {
+    // ignore
+  }
+
+  return [...repos.values()].sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
 // ---- Contents API ----
