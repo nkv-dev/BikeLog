@@ -1,0 +1,276 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Fuel Log" activePage="fuel">
+  <div class="mx-auto max-w-lg px-4 py-4">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Fuel Log</h1>
+        <p class="k-label mt-0.5">Fill-ups and mileage</p>
+      </div>
+      <button id="add-fuel-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Add Entry
+      </button>
+    </div>
+
+    <div id="mileage-summary" class="mb-4 rounded-2xl border border-border bg-card p-4 shadow-card">
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div>
+          <p class="k-label">Avg mileage</p>
+          <p id="fuel-avg" class="k-stat mt-1 text-2xl font-bold text-card-foreground">--</p>
+          <p class="k-label mt-0.5 text-foreground/50">km/l</p>
+        </div>
+        <div>
+          <p class="k-label">Last fill</p>
+          <p id="fuel-last" class="k-stat mt-1 text-2xl font-bold text-card-foreground">--</p>
+          <p class="k-label mt-0.5 text-foreground/50">km/l</p>
+        </div>
+        <div>
+          <p class="k-label">Total spent</p>
+          <p id="fuel-total" class="k-stat mt-1 text-2xl font-bold text-card-foreground">₹0</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="no-bike-msg" class="hidden rounded-xl border border-border bg-card p-8 text-center">
+      <p class="text-sm text-muted-foreground">Select a bike first to view fuel entries.</p>
+      <a href="/bikes" class="mt-2 inline-block text-sm text-primary hover:underline">Add a bike</a>
+    </div>
+
+    <div id="fuel-list" class="space-y-3" aria-live="polite"></div>
+  </div>
+
+  <div id="fuel-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="fuel-dialog-title" tabindex="-1">
+    <div class="fixed inset-0 bg-black/50" id="fuel-dialog-overlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
+      <div class="mx-auto max-w-lg">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="fuel-dialog-title" class="text-lg font-bold">Log Fuel</h2>
+          <button id="close-fuel-dialog" aria-label="Close dialog" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <form id="fuel-form" class="space-y-4">
+          <div>
+            <label for="fuel-date" class="mb-1 block text-sm font-medium">Date</label>
+            <input type="date" id="fuel-date" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="fuel-odometer" class="mb-1 block text-sm font-medium">Odometer (km)</label>
+              <input type="number" id="fuel-odometer" required min="0" placeholder="15200" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label for="fuel-litres" class="mb-1 block text-sm font-medium">Litres</label>
+              <input type="number" id="fuel-litres" required min="0.1" step="0.1" placeholder="5.2" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="fuel-price" class="mb-1 block text-sm font-medium">Price/Litre (₹)</label>
+              <input type="number" id="fuel-price" required min="1" step="0.01" placeholder="102.50" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label for="fuel-total-input" class="mb-1 block text-sm font-medium">Total (₹)</label>
+              <input type="number" id="fuel-total-input" readonly aria-label="Total cost in rupees (calculated automatically)" class="w-full rounded-lg border border-input bg-muted px-3 py-2.5 text-sm text-muted-foreground" />
+            </div>
+          </div>
+          <div class="rounded-lg border border-border bg-muted/50 p-3">
+            <label for="fuel-full-tank" class="flex items-center gap-2">
+              <input type="checkbox" id="fuel-full-tank" checked class="h-5 w-5 rounded border-input text-primary focus:ring-primary" />
+              <span class="text-sm font-medium">Full tank</span>
+            </label>
+            <p class="mt-1 text-xs text-muted-foreground">Uncheck if this is a partial top-up. Only full-tank entries are used to calculate mileage.</p>
+          </div>
+          <div>
+            <label for="fuel-station" class="mb-1 block text-sm font-medium">Station (optional)</label>
+            <input type="text" id="fuel-station" placeholder="Indian Oil, HP..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div>
+            <label for="fuel-notes" class="mb-1 block text-sm font-medium">Notes (optional)</label>
+            <textarea id="fuel-notes" rows="2" placeholder="Any notes..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+          </div>
+          <button type="submit" class="w-full rounded-lg bg-primary py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+            Save Entry
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { bikeStore, fuelStore, settingsStore } from "@/lib/store";
+    import { calculateMileage, calculateLastMileage, calculateTotalKm, calculateMonthlySpend } from "@/lib/mileage";
+    import { generateId, formatINR, formatOdometer, formatDate } from "@/lib/indian-utils";
+    import { showToast, confirmDialog } from "@/lib/toast";
+
+    function getActiveBikeId(): string | null {
+      return settingsStore.get().activeBikeId;
+    }
+
+    function renderFuelEntries() {
+      const bikeId = getActiveBikeId();
+      const fuelList = document.getElementById("fuel-list");
+      const noBikeMsg = document.getElementById("no-bike-msg");
+      const mileageSummary = document.getElementById("mileage-summary");
+      const addBtn = document.getElementById("add-fuel-btn");
+
+      if (!bikeId) {
+        fuelList!.classList.add("hidden");
+        noBikeMsg!.classList.remove("hidden");
+        mileageSummary!.classList.add("hidden");
+        addBtn!.classList.add("hidden");
+        return;
+      }
+
+      fuelList!.classList.remove("hidden");
+      noBikeMsg!.classList.add("hidden");
+      mileageSummary!.classList.remove("hidden");
+      addBtn!.classList.remove("hidden");
+
+      const entries = fuelStore.getByBike(bikeId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const avgMileage = calculateMileage(entries);
+      const lastMileage = calculateLastMileage(entries);
+      const totalSpent = entries.reduce((s, e) => s + e.totalCost, 0);
+
+      document.getElementById("fuel-avg")!.textContent = avgMileage ? avgMileage.toFixed(1) : "--";
+      document.getElementById("fuel-last")!.textContent = lastMileage ? lastMileage.toFixed(1) : "--";
+      document.getElementById("fuel-total")!.textContent = formatINR(totalSpent);
+
+      if (entries.length === 0) {
+        fuelList!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No fuel entries yet. Tap <strong>Add Entry</strong> to log your first fill-up.</p></div>`;
+        return;
+      }
+
+      fuelList!.innerHTML = entries
+        .map(
+          (e) => `
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="flex items-start gap-3">
+              <span class="k-entry-dot bg-green-500" aria-hidden="true"></span>
+              <div class="min-w-0">
+                <p class="k-entry-title">${formatOdometer(e.odometer)}</p>
+                <p class="k-entry-mono mt-0.5">${e.litres}L × ${formatINR(e.pricePerLitre)}/L</p>
+                <p class="k-entry-sub mt-0.5">${formatDate(e.date)}${e.isFullTank ? " · Full tank" : ""}${e.station ? " · " + e.station : ""}</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-1">
+              <p class="k-stat text-base font-semibold text-card-foreground">${formatINR(e.totalCost)}</p>
+              <button onclick="deleteFuel('${e.id}')" aria-label="Delete this fuel entry" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>`
+        )
+        .join("");
+    }
+
+    const dialog = document.getElementById("fuel-dialog")!;
+    const overlay = document.getElementById("fuel-dialog-overlay")!;
+    const form = document.getElementById("fuel-form") as HTMLFormElement;
+    const litresInput = document.getElementById("fuel-litres") as HTMLInputElement;
+    const priceInput = document.getElementById("fuel-price") as HTMLInputElement;
+    const totalInput = document.getElementById("fuel-total-input") as HTMLInputElement;
+    const addBtn = document.getElementById("add-fuel-btn")!;
+    let lastFocused: HTMLElement | null = null;
+
+    function calcTotal() {
+      const l = parseFloat(litresInput.value) || 0;
+      const p = parseFloat(priceInput.value) || 0;
+      totalInput.value = (l * p).toFixed(0);
+    }
+    litresInput.addEventListener("input", calcTotal);
+    priceInput.addEventListener("input", calcTotal);
+
+    function openDialog() {
+      if (!getActiveBikeId()) {
+        showToast("Please add and select a bike first.", "error");
+        window.location.href = "/bikes";
+        return;
+      }
+      lastFocused = document.activeElement as HTMLElement;
+      dialog.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      (document.getElementById("fuel-date") as HTMLInputElement).value = new Date().toISOString().split("T")[0];
+
+      const entries = fuelStore.getByBike(getActiveBikeId() || "");
+      if (entries.length > 0) {
+        const last = entries.sort((a, b) => b.odometer - a.odometer)[0];
+        priceInput.value = last.pricePerLitre.toString();
+        calcTotal();
+      }
+
+      (document.getElementById("fuel-date") as HTMLInputElement).focus();
+    }
+
+    function closeDialog() {
+      dialog.classList.add("hidden");
+      document.body.style.overflow = "";
+      form.reset();
+      if (lastFocused) lastFocused.focus();
+    }
+
+    function onKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !dialog.classList.contains("hidden")) {
+        e.preventDefault();
+        closeDialog();
+      }
+    }
+    document.addEventListener("keydown", onKeydown);
+
+    document.getElementById("add-fuel-btn")!.onclick = openDialog;
+    document.getElementById("close-fuel-dialog")!.onclick = closeDialog;
+    overlay.onclick = closeDialog;
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const bikeId = getActiveBikeId();
+      if (!bikeId) {
+        showToast("Please select a bike first.", "error");
+        return;
+      }
+
+      const entry = {
+        id: generateId(),
+        bikeId,
+        date: (document.getElementById("fuel-date") as HTMLInputElement).value,
+        odometer: parseInt((document.getElementById("fuel-odometer") as HTMLInputElement).value),
+        litres: parseFloat((document.getElementById("fuel-litres") as HTMLInputElement).value),
+        pricePerLitre: parseFloat((document.getElementById("fuel-price") as HTMLInputElement).value),
+        totalCost: parseFloat((document.getElementById("fuel-total-input") as HTMLInputElement).value),
+        isFullTank: (document.getElementById("fuel-full-tank") as HTMLInputElement).checked,
+        station: (document.getElementById("fuel-station") as HTMLInputElement).value || undefined,
+        notes: (document.getElementById("fuel-notes") as HTMLInputElement).value || undefined,
+      };
+
+      fuelStore.add(entry);
+
+      const bike = bikeStore.getById(bikeId);
+      if (bike && entry.odometer > bike.odometer) {
+        bikeStore.update(bikeId, { odometer: entry.odometer });
+      }
+
+      closeDialog();
+      renderFuelEntries();
+      showToast("Fuel entry saved");
+      window.dispatchEvent(new Event("bikelog:data-changed"));
+    };
+
+    (window as any).deleteFuel = (id: string) => {
+      confirmDialog("Delete this fuel entry?", () => {
+        fuelStore.remove(id);
+        renderFuelEntries();
+        showToast("Fuel entry deleted", "info");
+        window.dispatchEvent(new Event("bikelog:data-changed"));
+      });
+    };
+
+    renderFuelEntries();
+    addBtn.classList.add("hidden");
+  </script>
+</BaseLayout>

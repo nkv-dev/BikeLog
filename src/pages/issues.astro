@@ -1,0 +1,247 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Issues" activePage="issues">
+  <div class="mx-auto max-w-lg px-4 py-4">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Issues & Repairs</h1>
+        <p class="k-label mt-0.5">What needs attention</p>
+      </div>
+      <button id="add-issue-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Report Issue
+      </button>
+    </div>
+
+    <div id="no-bike-msg" class="hidden rounded-xl border border-border bg-card p-8 text-center">
+      <p class="text-sm text-muted-foreground">Select a bike first to view issues.</p>
+      <a href="/bikes" class="mt-2 inline-block text-sm font-medium text-primary hover:underline">Add a bike</a>
+    </div>
+
+    <div id="issues-list" class="space-y-3" aria-live="polite"></div>
+  </div>
+
+  <div id="issue-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="issue-dialog-title" tabindex="-1">
+    <div class="fixed inset-0 bg-black/50" id="issue-dialog-overlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
+      <div class="mx-auto max-w-lg">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="issue-dialog-title" class="text-lg font-bold">Report Issue</h2>
+          <button id="close-issue-dialog" aria-label="Close dialog" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <form id="issue-form" class="space-y-4">
+          <div>
+            <label for="issue-title" class="mb-1 block text-sm font-medium">Issue Title</label>
+            <input type="text" id="issue-title" required placeholder="e.g. Strange noise from front brake" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="issue-date" class="mb-1 block text-sm font-medium">Date</label>
+              <input type="date" id="issue-date" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label for="issue-odometer" class="mb-1 block text-sm font-medium">Odometer (km)</label>
+              <input type="number" id="issue-odometer" required min="0" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+          <div>
+            <label for="issue-desc" class="mb-1 block text-sm font-medium">Description</label>
+            <textarea id="issue-desc" rows="3" placeholder="Describe the issue in detail..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="issue-severity" class="mb-1 block text-sm font-medium">Severity</label>
+              <select id="issue-severity" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+            <div>
+              <label for="issue-status" class="mb-1 block text-sm font-medium">Status</label>
+              <select id="issue-status" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="reported" selected>Reported</option>
+                <option value="diagnosed">Diagnosed</option>
+                <option value="in-progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="issue-est-cost" class="mb-1 block text-sm font-medium">Est. Cost (₹)</label>
+              <input type="number" id="issue-est-cost" min="0" placeholder="500" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label for="issue-actual-cost" class="mb-1 block text-sm font-medium">Actual Cost (₹)</label>
+              <input type="number" id="issue-actual-cost" min="0" placeholder="450" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+          <div>
+            <label for="issue-notes" class="mb-1 block text-sm font-medium">Notes (optional)</label>
+            <textarea id="issue-notes" rows="2" placeholder="Any notes..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+          </div>
+          <button type="submit" class="w-full rounded-lg bg-primary py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+            Save Issue
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { bikeStore, serviceStore, settingsStore } from "@/lib/store";
+    import { generateId, formatINR, formatOdometer, formatDate, SEVERITY_CONFIG, STATUS_CONFIG } from "@/lib/indian-utils";
+    import { showToast, confirmDialog } from "@/lib/toast";
+
+    function getActiveBikeId(): string | null {
+      return settingsStore.get().activeBikeId;
+    }
+
+    function getIssues() {
+      const bikeId = getActiveBikeId();
+      if (!bikeId) return [];
+      return serviceStore.getByBike(bikeId).filter((e) => e.type === "issue");
+    }
+
+    function renderEntries() {
+      const bikeId = getActiveBikeId();
+      const list = document.getElementById("issues-list");
+      const noBikeMsg = document.getElementById("no-bike-msg");
+      const addBtn = document.getElementById("add-issue-btn");
+
+      if (!bikeId) {
+        list!.classList.add("hidden");
+        noBikeMsg!.classList.remove("hidden");
+        addBtn!.classList.add("hidden");
+        return;
+      }
+
+      list!.classList.remove("hidden");
+      noBikeMsg!.classList.add("hidden");
+      addBtn!.classList.remove("hidden");
+
+      const entries = getIssues().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      if (entries.length === 0) {
+        list!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No issues reported yet. Tap <strong>Report Issue</strong> if something goes wrong with your bike.</p></div>`;
+        return;
+      }
+
+      list!.innerHTML = entries
+        .map(
+          (e) => `
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="k-entry-dot ${e.status === "resolved" ? "bg-green-500" : e.severity === "high" || e.severity === "critical" ? "bg-orange-500" : "bg-blue-400"}" aria-hidden="true"></span>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  ${e.severity ? `<span class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${SEVERITY_CONFIG[e.severity].color}">${SEVERITY_CONFIG[e.severity].label}</span>` : ""}
+                  ${e.status ? `<span class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${STATUS_CONFIG[e.status].color}">${STATUS_CONFIG[e.status].label}</span>` : ""}
+                </div>
+                <p class="k-entry-title mt-1.5 truncate">${e.title || e.items.join(", ")}</p>
+                <p class="k-entry-mono mt-0.5">${formatOdometer(e.odometer)} · ${formatDate(e.date)}</p>
+                ${e.description ? `<p class="k-entry-sub mt-1 line-clamp-2">${e.description}</p>` : ""}
+              </div>
+            </div>
+            <div class="flex shrink-0 flex-col items-end gap-1">
+              ${e.estimatedCost ? `<p class="k-stat text-base font-semibold text-card-foreground">${formatINR(e.estimatedCost)}</p>` : ""}
+              <button onclick="deleteIssue('${e.id}')" aria-label="Delete this issue" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>`
+        )
+        .join("");
+    }
+
+    const dialog = document.getElementById("issue-dialog")!;
+    const overlay = document.getElementById("issue-dialog-overlay")!;
+    const form = document.getElementById("issue-form") as HTMLFormElement;
+    let lastFocused: HTMLElement | null = null;
+
+    function openDialog() {
+      if (!getActiveBikeId()) {
+        showToast("Please add and select a bike first.", "error");
+        window.location.href = "/bikes";
+        return;
+      }
+      lastFocused = document.activeElement as HTMLElement;
+      dialog.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      const bikeId = getActiveBikeId();
+      const bike = bikeId ? bikeStore.getById(bikeId) : null;
+      const odometerEl = document.getElementById("issue-odometer") as HTMLInputElement;
+      if (bike) odometerEl.value = bike.odometer.toString();
+      (document.getElementById("issue-date") as HTMLInputElement).value = new Date().toISOString().split("T")[0];
+      (document.getElementById("issue-title") as HTMLInputElement).focus();
+    }
+
+    function closeDialog() {
+      dialog.classList.add("hidden");
+      document.body.style.overflow = "";
+      form.reset();
+      if (lastFocused) lastFocused.focus();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dialog.classList.contains("hidden")) {
+        e.preventDefault();
+        closeDialog();
+      }
+    });
+
+    document.getElementById("add-issue-btn")!.onclick = openDialog;
+    document.getElementById("close-issue-dialog")!.onclick = closeDialog;
+    overlay.onclick = closeDialog;
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const bikeId = getActiveBikeId();
+      if (!bikeId) {
+        showToast("Please select a bike first.", "error");
+        return;
+      }
+
+      const entry = {
+        id: generateId(),
+        bikeId,
+        date: (document.getElementById("issue-date") as HTMLInputElement).value,
+        odometer: parseInt((document.getElementById("issue-odometer") as HTMLInputElement).value),
+        type: "issue" as const,
+        items: [],
+        cost: parseInt((document.getElementById("issue-actual-cost") as HTMLInputElement).value) || 0,
+        title: (document.getElementById("issue-title") as HTMLInputElement).value,
+        description: (document.getElementById("issue-desc") as HTMLTextAreaElement).value,
+        severity: (document.getElementById("issue-severity") as HTMLSelectElement).value as "low" | "medium" | "high" | "critical",
+        status: (document.getElementById("issue-status") as HTMLSelectElement).value as "reported" | "diagnosed" | "in-progress" | "resolved",
+        estimatedCost: parseInt((document.getElementById("issue-est-cost") as HTMLInputElement).value) || undefined,
+        actualCost: parseInt((document.getElementById("issue-actual-cost") as HTMLInputElement).value) || undefined,
+        notes: (document.getElementById("issue-notes") as HTMLTextAreaElement).value || undefined,
+      };
+
+      serviceStore.add(entry);
+      closeDialog();
+      renderEntries();
+      showToast("Issue reported");
+    };
+
+    (window as any).deleteIssue = (id: string) => {
+      confirmDialog("Delete this issue?", () => {
+        serviceStore.remove(id);
+        renderEntries();
+        showToast("Issue deleted", "info");
+      });
+    };
+
+    renderEntries();
+  </script>
+</BaseLayout>

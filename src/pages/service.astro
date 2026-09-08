@@ -1,0 +1,258 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Service Log" activePage="service">
+  <div class="mx-auto max-w-lg px-4 py-4">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Service Log</h1>
+        <p class="k-label mt-0.5">Maintenance history</p>
+      </div>
+      <button id="add-service-btn" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.97]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Add Entry
+      </button>
+    </div>
+
+    <div id="no-bike-msg" class="hidden rounded-xl border border-border bg-card p-8 text-center">
+      <p class="text-sm text-muted-foreground">Select a bike first to view service entries.</p>
+      <a href="/bikes" class="mt-2 inline-block text-sm font-medium text-primary hover:underline">Add a bike</a>
+    </div>
+
+    <div id="service-list" class="space-y-3" aria-live="polite"></div>
+  </div>
+
+  <div id="service-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="service-dialog-title" tabindex="-1">
+    <div class="fixed inset-0 bg-black/50" id="service-dialog-overlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-6 shadow-lg">
+      <div class="mx-auto max-w-lg">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="service-dialog-title" class="text-lg font-bold">Log Service</h2>
+          <button id="close-service-dialog" aria-label="Close dialog" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <form id="service-form" class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="svc-date" class="mb-1 block text-sm font-medium">Date</label>
+              <input type="date" id="svc-date" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label for="svc-odometer" class="mb-1 block text-sm font-medium">Odometer (km)</label>
+              <input type="number" id="svc-odometer" required min="0" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+          <div>
+            <label for="svc-type" class="mb-1 block text-sm font-medium">Service Type</label>
+            <select id="svc-type" required class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+              <option value="scheduled">Scheduled</option>
+              <option value="repair">Repair</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+          <fieldset>
+            <legend class="mb-1 block text-sm font-medium">What was done?</legend>
+            <div id="svc-items" class="grid grid-cols-2 gap-2"></div>
+          </fieldset>
+          <div>
+            <label for="svc-cost" class="mb-1 block text-sm font-medium">Cost (₹)</label>
+            <input type="number" id="svc-cost" required min="0" placeholder="1500" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div>
+            <label for="svc-workshop" class="mb-1 block text-sm font-medium">Workshop (optional)</label>
+            <input type="text" id="svc-workshop" placeholder="Authorized center, local mechanic..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="svc-next-km" class="mb-1 block text-sm font-medium">Next Service (km)</label>
+              <input type="number" id="svc-next-km" min="0" placeholder="20000" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label for="svc-next-date" class="mb-1 block text-sm font-medium">Next Service Date</label>
+              <input type="date" id="svc-next-date" class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+          <div>
+            <label for="svc-notes" class="mb-1 block text-sm font-medium">Notes (optional)</label>
+            <textarea id="svc-notes" rows="2" placeholder="Any notes..." class="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+          </div>
+          <button type="submit" class="w-full rounded-lg bg-primary py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+            Save Entry
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { bikeStore, serviceStore, settingsStore } from "@/lib/store";
+    import { generateId, formatINR, formatOdometer, formatDate, COMMON_SERVICE_ITEMS } from "@/lib/indian-utils";
+    import { showToast, confirmDialog } from "@/lib/toast";
+
+    function getActiveBikeId(): string | null {
+      return settingsStore.get().activeBikeId;
+    }
+
+    function renderServiceItems() {
+      const container = document.getElementById("svc-items")!;
+      container.innerHTML = COMMON_SERVICE_ITEMS.map(
+        (item) => `
+        <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors hover:bg-muted">
+          <input type="checkbox" name="svc-item" value="${item}" class="h-5 w-5 rounded border-input text-primary focus:ring-primary" />
+          <span>${item}</span>
+        </label>`
+      ).join("");
+    }
+
+    function renderEntries() {
+      const bikeId = getActiveBikeId();
+      const list = document.getElementById("service-list");
+      const noBikeMsg = document.getElementById("no-bike-msg");
+      const addBtn = document.getElementById("add-service-btn");
+
+      if (!bikeId) {
+        list!.classList.add("hidden");
+        noBikeMsg!.classList.remove("hidden");
+        addBtn!.classList.add("hidden");
+        return;
+      }
+
+      list!.classList.remove("hidden");
+      noBikeMsg!.classList.add("hidden");
+      addBtn!.classList.remove("hidden");
+
+      const entries = serviceStore
+        .getByBike(bikeId)
+        .filter((e) => e.type !== "issue")
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      if (entries.length === 0) {
+        list!.innerHTML = `<div class="rounded-xl border border-border bg-card p-8 text-center"><p class="text-sm text-muted-foreground">No service entries yet. Tap <strong>Add Entry</strong> to log your first service.</p></div>`;
+        return;
+      }
+
+      list!.innerHTML = entries
+        .map(
+          (e) => `
+        <div class="k-entry">
+          <div class="k-entry-row">
+            <div class="flex items-start gap-3">
+              <span class="k-entry-dot bg-blue-500" aria-hidden="true"></span>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-blue-800 dark:bg-blue-900 dark:text-blue-300">${e.type}</span>
+                  <p class="k-entry-mono">${formatDate(e.date)}</p>
+                </div>
+                <p class="k-entry-title mt-1">${formatOdometer(e.odometer)}</p>
+                <p class="k-entry-sub mt-0.5">${e.items.join(", ") || "General service"}</p>
+                ${e.workshop ? `<p class="k-entry-sub">${e.workshop}</p>` : ""}
+                ${e.nextServiceKm ? `<p class="k-entry-sub mt-0.5 font-medium text-primary">Next at ${e.nextServiceKm.toLocaleString("en-IN")} km</p>` : ""}
+              </div>
+            </div>
+            <div class="flex items-start gap-1">
+              <p class="k-stat text-base font-semibold text-card-foreground">${formatINR(e.cost)}</p>
+              <button onclick="deleteService('${e.id}')" aria-label="Delete this service entry" class="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>`
+        )
+        .join("");
+    }
+
+    const dialog = document.getElementById("service-dialog")!;
+    const overlay = document.getElementById("service-dialog-overlay")!;
+    const form = document.getElementById("service-form") as HTMLFormElement;
+    let lastFocused: HTMLElement | null = null;
+
+    function openDialog() {
+      const bikeId = getActiveBikeId();
+      if (!bikeId) {
+        showToast("Please add and select a bike first.", "error");
+        window.location.href = "/bikes";
+        return;
+      }
+      lastFocused = document.activeElement as HTMLElement;
+      dialog.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      (document.getElementById("svc-date") as HTMLInputElement).value = new Date().toISOString().split("T")[0];
+
+      const bike = bikeStore.getById(bikeId);
+      const odometerEl = document.getElementById("svc-odometer") as HTMLInputElement;
+      if (bike) odometerEl.value = bike.odometer.toString();
+
+      renderServiceItems();
+      (document.getElementById("svc-date") as HTMLInputElement).focus();
+    }
+
+    function closeDialog() {
+      dialog.classList.add("hidden");
+      document.body.style.overflow = "";
+      form.reset();
+      if (lastFocused) lastFocused.focus();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dialog.classList.contains("hidden")) {
+        e.preventDefault();
+        closeDialog();
+      }
+    });
+
+    document.getElementById("add-service-btn")!.onclick = openDialog;
+    document.getElementById("close-service-dialog")!.onclick = closeDialog;
+    overlay.onclick = closeDialog;
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const bikeId = getActiveBikeId();
+      if (!bikeId) {
+        showToast("Please select a bike first.", "error");
+        return;
+      }
+
+      const checkedItems = Array.from(document.querySelectorAll('input[name="svc-item"]:checked')).map((el) => (el as HTMLInputElement).value);
+
+      const entry = {
+        id: generateId(),
+        bikeId,
+        date: (document.getElementById("svc-date") as HTMLInputElement).value,
+        odometer: parseInt((document.getElementById("svc-odometer") as HTMLInputElement).value),
+        type: (document.getElementById("svc-type") as HTMLSelectElement).value as "scheduled" | "repair" | "general",
+        items: checkedItems,
+        cost: parseInt((document.getElementById("svc-cost") as HTMLInputElement).value) || 0,
+        workshop: (document.getElementById("svc-workshop") as HTMLInputElement).value || undefined,
+        notes: (document.getElementById("svc-notes") as HTMLInputElement).value || undefined,
+        nextServiceKm: parseInt((document.getElementById("svc-next-km") as HTMLInputElement).value) || undefined,
+        nextServiceDate: (document.getElementById("svc-next-date") as HTMLInputElement).value || undefined,
+      };
+
+      serviceStore.add(entry);
+
+      const bike = bikeStore.getById(bikeId);
+      if (bike && entry.odometer > bike.odometer) {
+        bikeStore.update(bikeId, { odometer: entry.odometer });
+      }
+
+      closeDialog();
+      renderEntries();
+      showToast("Service entry saved");
+      window.dispatchEvent(new Event("bikelog:data-changed"));
+    };
+
+    (window as any).deleteService = (id: string) => {
+      confirmDialog("Delete this service entry?", () => {
+        serviceStore.remove(id);
+        renderEntries();
+        showToast("Service entry deleted", "info");
+        window.dispatchEvent(new Event("bikelog:data-changed"));
+      });
+    };
+
+    renderEntries();
+  </script>
+</BaseLayout>
