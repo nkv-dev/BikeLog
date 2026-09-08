@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest an idea or improvement for BikeLog.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe the feature you want and why it helps.
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Possible approaches
+      description: Any ideas on how it might be implemented (optional).
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Screenshots, links, or notes.
+    validations:
+      required: false

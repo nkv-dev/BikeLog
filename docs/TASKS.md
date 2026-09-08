@@ -49,13 +49,32 @@ A running log of what's been done and what's next. Keep this updated as work lan
 - Pages — new `rides.astro`, `mods.astro`, `checklists.astro`; `issues.astro` is now a
   filtered view of service `type:"issue"`; service page excludes issues; nav is 7 items
   (Home/Fuel/Service/Rides/Mods/Checks/Bikes).
-- **Auto-sync:** header sync button + debounced (5s) auto-push after any local change
-  when connected; store mutations notify via `bikelog:data-changed`.
+- **Auto-sync:** header push (↑) / pull (↓) buttons + debounced (5s) auto-push after any
+  local change when connected; store mutations notify via `bikelog:data-changed`.
 - Docs updated (`docs/DATA.md` → 0.0.2 layout, SETUP/README), `package.json` → 0.0.2.
 - Verified: `pnpm build` green; all 9 pages return 200; markdown round-trip + legacy
   migration tests pass.
 
-## Next (0.0.2 cleanup)
+### `fix/mobile-nav-sync-buttons` branch — bottom-nav overlap + push/pull header buttons
+- All entry dialogs (fuel/service/rides/mods/checklists/bikes/issues) raised to `z-[80]` so
+  the fixed bottom nav (`z-50`) no longer covers the Save Entry button / dialog content.
+- Header refresh "Sync" toggle replaced with two explicit buttons: **↑ push** and **↓ pull**
+  (dispatches `bikelog:data-changed` after pull so pages re-render). Auto-sync debounce still
+  pushes on data change.
+- Docs updated in AGENTS.md §6 and SETUP.md verify steps.
+
+### `feat/open-source-mit` branch — open-source release + private-repo hardening
+- Added MIT `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`.
+- Added `.github/workflows/ci.yml` (install → type-check → build) + issue/PR templates.
+- `package.json` → version `0.1.0`, added `license`, `author`, `description`, `homepage`,
+  `repository`, `bugs`, `keywords`, and a `check` (`astro check`) script.
+- **Private-repo support verified/improved:** `select-repo` now validates the chosen repo is
+  actually pushable by the connected user (`listUserRepos`) before persisting (clear 403
+  otherwise). Settings copy explains private repos are fully supported. Media serving was
+  already token-authenticated (private-safe).
+- Docs: new `docs/USAGE.md` (end-user connect/select/push/pull guide), SETUP/DATA updated.
+
+## Next (0.0.2/0.1.0 cleanup)
 
 - [ ] Merge `dev/data-structure-0.0.2` → `github-sync` → `main`; redeploy Worker from `main`.
 - [ ] B1 — cascade-delete fuel/service/ride/mod/checklist entries when a bike is deleted
@@ -74,5 +93,4 @@ A running log of what's been done and what's next. Keep this updated as work lan
 
 ## Backlog (open-source)
 
-- [ ] LICENSE + CONTRIBUTING + CI
 - [ ] Multi-device conflict strategy (last-write-wins is current behavior)

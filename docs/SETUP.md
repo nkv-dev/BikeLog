@@ -16,6 +16,12 @@ The app itself stores **no user data**. That means a single shared front-end wor
 - **Node.js ≥ 22.12** and `pnpm` locally (or use Cloudflare's dashboard).
 - `wrangler` is already a dependency (`pnpm exec wrangler …`).
 
+> **Public or private repo?** Both work. Users can pick **any repo they can push
+> to**, including **private** ones (recommended for data privacy). The GitHub App
+> token carries the repo permissions, so private repos sync exactly like public
+> ones and photos are still served through the authenticated `/api/sync/media`
+> endpoint.
+
 ---
 
 ## 2. Create a GitHub App (one per deployment)
@@ -113,12 +119,22 @@ Each deploy uploads the Worker + static assets. No Pages project needed (Workers
 
 1. Open your deployed site.
 2. **Settings → GitHub Sync → Connect with GitHub**.
-3. Authorize the GitHub App.
-4. Pick an existing repo (data goes into a `bikelog/` folder; you can use a dedicated data repo or an existing one).
-5. Hit **Push data** once — a `bikelog/bikes/<slug>/bike.md` + `bikelog/README.md` appear in your repo. Afterwards auto-sync keeps GitHub mirrored (5s after each change); the header sync button forces a push.
-6. Edit something and use **Pull data** on another device to fetch it.
+3. Authorize the GitHub App (choose an install scope that includes the repo you'll use).
+4. Pick an existing repo (**public or private** — for private repos the app must be
+   installed on them). Data goes into a `bikelog/` folder; you can use a dedicated
+   data repo or an existing one.
+5. Hit **Push data** once — a `bikelog/bikes/<slug>/bike.md` + `bikelog/README.md`
+   appear in your repo. Afterwards auto-sync keeps GitHub mirrored (5s after each
+   change); the header **↑** button forces a push and **↓** forces a pull.
+6. Edit something and use **Pull data** (Settings or header **↓**) on another device
+   to fetch it.
 
 ### Troubleshooting
+
+- **"You don't have push access to that repo"** on repo save → the selected repo
+  isn't one the GitHub App token can write to. Install the GitHub App on that repo
+  (GitHub → Settings → Applications → BikeLog → Configure → Add repository) and
+  reconnect, then save again.
 
 - **Push fails with `403 "Resource not accessible by integration"`** on `/git/blobs` →
   the GitHub App is missing the **Contents: Read and write** repository permission
@@ -131,7 +147,7 @@ Each deploy uploads the Worker + static assets. No Pages project needed (Workers
   just push again.
 - **Pull returns nothing on a fresh repo** → normal; there is no data until the first push.
 
-Photos upload to `bikelog/bikes/<bike-slug>/media/` and are served back through the authenticated `/api/sync/media` endpoint (so even private repos work).
+Photos upload to `bikelog/bikes/<bike-slug>/media/` and are served back through the authenticated `/api/sync/media` endpoint (so even **private** repos work and photos are never exposed publicly).
 
 ---
 
