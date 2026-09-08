@@ -85,21 +85,27 @@ Note the space in the parent path — always quote paths when using shell comman
 | `94ba7d5` | 2026-09-08 | merge: TS7 typecheck setup + astro editor module resolution into main |
 | `21b2d25` | 2026-09-08 | fix: bootstrap pushes into empty GitHub repos |
 | `a040bfe` | 2026-09-08 | merge: bootstrap empty-repo pushes into main |
+| `224fd7e` | 2026-09-08 | fix: dialogs above bottom nav; replace sync toggle with push/pull arrows ← **fix/mobile-nav-sync-buttons** |
+| `47315cf` | 2026-09-08 | merge: mobile nav + push/pull sync buttons into main |
+| ← **feat/open-source-mit** | current | open-source release: MIT LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CI + templates, package.json → 0.1.0, private-repo hardening, docs/USAGE.md |
 
 ### Branch map (local + remote)
 
 | Branch | Purpose / content | Last commit |
 |---|---|---|
-| `main` ← current | Integration branch; deploy target | `a040bfe` |
+| `main` ← current (deploy target) | Integration branch | `47315cf` |
+| `feat/open-source-mit` | Open-source release + private-repo hardening (this work) | current |
+| `fix/mobile-nav-sync-buttons` | Bottom-nav/dialog overlap fix; header ↑ push / ↓ pull buttons | `224fd7e` |
 | `develop` | Premium "garage-ledger" redesign iteration | `d82ec0b` |
 | `themes` | Bike-brand accent theme system | `9635e99` |
 | `github-sync` | GitHub OAuth + Markdown sync + photos (0.0.1) | `afc67df` |
 | `dev/data-structure-0.0.2` | 0.0.2 per-entry repo layout + rides/mods/checklists + auto-sync | `3996696` |
 | `fix/empty-repo-bootstrap` | Bootstrap pushes into empty GitHub repos | `21b2d25` |
 | `fix/typecheck-ts7` | TS7 typecheck setup + astro editor module resolution | `7e629b5` |
-| `AGENTS.md` ← this branch | This documentation update | new |
+| `AGENTS.md` | This documentation | `8b7e25c` (merged) |
 
-Remote-tracking branches exist for: `main`, `themes`, `github-sync`, `develop`, `dev/data-structure-0.0.2`.
+Remote-tracking branch exists for: **`main` only** (per project rule: only `main` is
+pushed to GitHub; all other branches are local-only; `push.default` is `upstream`).
 
 ---
 
@@ -142,7 +148,7 @@ there (do not depend on CDN). `theme-toggle` is imported directly from `@/compon
 - `@astrojs/cloudflare` ^14.3.0, `astro` ^7.3.1, `wrangler` ^4.129.0
 - `@starwind-ui/astro` 1.2.0, `tailwindcss`/`@tailwindcss/vite` ^4.3.3, `tailwind-merge` ^3.6.0, `tailwind-variants` ^3.3.1
 - `@astrojs/check` ^0.9.10, `typescript` ^6.0.3
-- Package `name: "bikelog"`, `version: "0.0.2"`, `"type": "module"`
+- Package `name: "bikelog"`, `version: "0.1.0"`, `"type": "module"`, license `MIT`, repo `nkv-dev/BikeLog`
 
 ---
 
@@ -358,8 +364,11 @@ filenames via slugify; duplicate names get an `-<id5>` suffix.
 
 ### Sync behavior
 
-- **Auto-sync (0.0.2):** after connecting + selecting a repo, every local change auto-pushes
+- **Auto-sync:** after connecting + selecting a repo, every local change auto-pushes
   after a **5s debounce**. Header push (↑) button forces an immediate push; header pull (↓) button forces a pull.
+- **Private repos fully supported:** the selected repo may be public or private; the GitHub
+  App token carries the permissions, `select-repo` validates push access (`listUserRepos`)
+  before persisting, and photos are served via authenticated `/api/sync/media`.
 - **Push:** serializes all localStorage → per-entry `.md` + `README.md`, commits to the
   selected repo's default branch. Removes stale/legacy files.
 - **Pull:** reads all `bikelog/bikes/<slug>/**`, parses into the six collections, replaces
@@ -432,7 +441,7 @@ They receive `(context: any)` and return `Response` objects.
 | `callback` | GET | Exchanges code, validates CSRF state, fetches user, saves token+login, 302 → `/` |
 | `me` | GET | `{connected:false}` or `{connected:true, login, name, avatar_url, repo}` |
 | `repos` | GET | `{connected, repos[], selected}` (list of pushable non-fork repos) |
-| `select-repo` | POST | Validates `<owner>/<repo>` regex, stores selection |
+| `select-repo` | POST | Validates `<owner>/<repo>` regex **and** push access (`listUserRepos`) before storing selection |
 | `disconnect` | POST | Clears session + token, 302 → `/settings` |
 
 `connect` scopes: `repo user`. GitHub App tokens live 8h; `me`/`repos` use the stored token.
@@ -527,9 +536,16 @@ pnpm exec astro dev stop|status|logs
   generator. Verified build + 9 pages + round-trip/migration tests.
 - **`fix/empty-repo-bootstrap`:** pushes into empty GitHub repos (initial-commit branch).
 - **`fix/typecheck-ts7`:** TS7 typecheck setup + astro editor module resolution.
+- **`fix/mobile-nav-sync-buttons`:** dialogs raised above the bottom nav (`z-[80]`); the header
+  sync toggle replaced with explicit **↑ push / ↓ pull** buttons; auto-sync debounce preserved.
+- **`feat/open-source-mit` (open-source release):** MIT `LICENSE`, `CONTRIBUTING.md`,
+  `CODE_OF_CONDUCT.md`, `SECURITY.md`, `.github/workflows/ci.yml` + issue/PR templates;
+  package.json → **0.1.0** (license/repo/keywords/`check` script); **private-repo support
+  hardened** (`select-repo` validates push access via `listUserRepos` before saving; settings
+  copy explains private repos; media was already token-authenticated). New end-user guide
+  `docs/USAGE.md`.
 
-### Next (0.0.2 cleanup)
-- [ ] Merge `dev/data-structure-0.0.2` → `github-sync` → `main`; redeploy (most already merged).
+### Next (0.1.0 cleanup)
 - [ ] **B1** — cascade-delete fuel/service/ride/mod/checklist entries when a bike is deleted
 - [ ] **B2** — odometer monotonicity + duplicate-date validation on entry save
 - [ ] **B4** — saving an issue should update the bike odometer
@@ -538,14 +554,15 @@ pnpm exec astro dev stop|status|logs
 - [ ] **B8** — dedupe brand names + fix `cfdmoto` typo
 - [ ] **F1** — edit existing fuel/service/issue entries (reuse `store.update`)
 - [ ] **F2** — auto service reminders from latest `nextServiceKm` / `nextServiceDate`
+- [ ] Multi-device conflict strategy (last-write-wins is current behavior)
 
 ### Blocked / waiting on user
 - [ ] GitHub App callback URL not added → live OAuth (auto-sync) can't be verified in prod.
   Must add `https://bikelog.nkv-dev.workers.dev/api/auth/callback` in the GitHub App dashboard.
 
 ### Backlog (open-source)
-- [ ] LICENSE + CONTRIBUTING + CI
-- [ ] Multi-device conflict strategy (last-write-wins is current behavior)
+- [ ] Publish a changelog/adapted `docs/TASKS.md` snapshot as release notes
+- [ ] Optional: add a "new private repo" quick-create link in Settings (needs `repo` scope)
 
 ---
 
@@ -621,5 +638,5 @@ install commands.
 
 ---
 
-*Last updated: 2026-09-08 (on branch `AGENTS.md`). Keep this file updated as new features,
+*Last updated: 2026-09-08 (on branch `feat/open-source-mit`). Keep this file updated as new features,
 bugs, formats, or gotchas land — it is the durable memory of the project.*

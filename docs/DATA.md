@@ -195,8 +195,9 @@ created: 2026-09-01T10:00:00.000Z
 ## Sync behavior
 
 - **Auto-sync (0.0.2):** once a repo is selected and you're connected, every local change
-  (add/edit/delete) auto-pushes to GitHub after a 5s debounce. The header sync button forces
-  a push immediately. Connect + repo selection happen once in Settings.
+  (add/edit/delete) auto-pushes to GitHub after a 5s debounce. The header **↑** button forces
+  a push; the header **↓** button forces a pull. Connect + repo selection happen once in Settings.
+  Public and **private** repos are both supported — private is recommended for data safety.
 - **Push** serializes all localStorage data into per-entry `.md` files + `README.md` and
   commits to the selected repo's default branch. Files (including legacy single-file bikes)
   no longer present locally are removed so a later pull doesn't resurrect them.

@@ -1,7 +1,29 @@
 {
   "name": "bikelog",
   "type": "module",
-  "version": "0.0.2",
+  "version": "0.1.0",
+  "description": "Local-first, GitHub-of-record web app for Indian bikers to track mileage, fuel, servicing, repairs, rides, and photos.",
+  "license": "MIT",
+  "author": "nkv-dev",
+  "homepage": "https://bikelog.nkv-dev.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nkv-dev/BikeLog.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nkv-dev/BikeLog/issues"
+  },
+  "keywords": [
+    "bikelog",
+    "motorcycle",
+    "mileage",
+    "fuel",
+    "maintenance",
+    "local-first",
+    "github-sync",
+    "astro",
+    "cloudflare-workers"
+  ],
   "engines": {
     "node": ">=22.12.0"
   },
@@ -9,6 +31,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "check": "astro check",
     "astro": "astro"
   },
   "dependencies": {
