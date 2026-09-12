@@ -53,16 +53,16 @@ export const GET = async (context: any) => {
   });
   const authorizeUrl = `https://github.com/login/oauth/authorize?${params.toString()}`;
 
-  // Start fresh: new pending session + clear any OAuth retry counter left behind
-  // by a bounced callback round trip.
-  const clearRetry =
-    "bikelog_oauth_retry=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
+  // Note: the bikelog_oauth_retry cookie is intentionally NOT cleared here —
+  // callback.ts resumes this endpoint on GitHub App no-code hops and uses that
+  // counter to bound the resume loop. Clearing it here would reset the counter
+  // on every hop and hide a broken GitHub App configuration forever.
 
   return new Response(null, {
     status: 302,
     headers: {
       Location: authorizeUrl,
-      "Set-Cookie": [header, clearRetry],
+      "Set-Cookie": header,
     },
   });
 };

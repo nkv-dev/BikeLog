@@ -291,8 +291,11 @@ AppSettings   { activeBikeId: string|null, theme: "light"|"dark"|"system", accen
   *without* a `code` on the post-installation hop (`setup_action=install` + `installation_id`)
   and, depending on App settings, even as a bare redirect. `callback.ts` detects these and
   resumes `/api/auth/connect` (fresh state) instead of erroring, bounded by a
-  `bikelog_oauth_retry` cookie (3 retries → clear error). CSRF state mismatch / expired 1h
-  pending session also resumes the flow. Success clears the retry cookie.
+  `bikelog_oauth_retry` cookie (8 hops, then a diagnostic error page). `connect.ts` does
+  **NOT** clear that counter (clearing it would reset on every hop and hide a broken GitHub
+  App config). CSRF state mismatch / expired 1h pending session also resumes the flow.
+  The failure page echoes the raw GitHub query params + expected `redirect_uri` so a stuck
+  hop is actionable. Success clears the retry cookie.
 - `makeEnv()` returns `env as GitHubEnv` via `cloudflare:workers`.
 
 ### `mdstore.ts` — Markdown (see §6 for exact format)
@@ -455,7 +458,7 @@ They receive `(context: any)` and return `Response` objects.
 | Endpoint | Method | Behavior |
 |---|---|---|
 | `connect` | GET | 302 → GitHub authorize (or 503 setup-help page if App unconfigured). Sets session cookie + CSRF state. **No `scope` param** — GitHub Apps use app-configured permissions. Also clears the OAuth retry counter cookie. |
-| `callback` | GET | Exchanges code, validates CSRF state, fetches user, saves token+login, 302 → `/`. **Resumes `/api/auth/connect`** when GitHub redirects without a code (post-install `setup_action`/`installation_id` hop, bare redirects from GitHub App settings) or on CSRF/expired-session mismatch — bounded by a `bikelog_oauth_retry` cookie (3 retries, then a clear error). Only real `error=` cancellations and irrecoverable cases show the error page. Success re-issues the 90-day session cookie. |
+| `callback` | GET | Exchanges code, validates CSRF state, fetches user, saves token+login, 302 → `/`. **Resumes `/api/auth/connect`** when GitHub redirects without a code (post-install `setup_action`/`installation_id` hop, bare redirects from GitHub App settings) or on CSRF/expired-session mismatch — bounded by a `bikelog_oauth_retry` cookie (8 hops, then a diagnostic error page echoing the raw GitHub query params). Only real `error=` cancellations and irrecoverable cases show the error page. Success re-issues the 90-day session cookie. |
 | `me` | GET | `{connected:false}` or `{connected:true, login, name, avatar_url, repo}` |
 | `repos` | GET | `{connected, repos[], selected}` (list of pushable non-fork repos) |
 | `select-repo` | POST | Validates `<owner>/<repo>` regex **and** push access (`listUserRepos`) before storing selection |
@@ -488,10 +491,12 @@ All sync endpoints return 401 when unauthenticated (via `SyncError` or explicit 
 5. **Format consistency:** the frontmatter `type:` key (or, for maintenance files, the
    service type) must match what each `markdownTo*` parser accepts; keep the key map in
    $6 and `docs/DATA.md` in sync.
-6. **pnpm builds:** local pnpm 12 uses `allowBuilds` in `pnpm-workspace.yaml`;
-   Cloudflare Pages (pnpm 10) uses `pnpm.onlyBuiltDependencies` (`esbuild`, `workerd`) in
-   `package.json` — **keep both** (the `pnpm-workspace.yaml` may be dropped/gitignored;
-   never delete `package.json` `pnpm` block).
+6. **pnpm builds (cross-version safe):** `pnpm-workspace.yaml` is a single-project workspace —
+   `packages: ["."]` (required by pnpm 10/11/12 else Pages fails with "packages field missing
+   or empty"), `onlyBuiltDependencies: [esbuild, workerd]` (pnpm 10/11), and `allowBuilds:`
+   (pnpm 12). The `package.json` `pnpm.onlyBuiltDependencies` block is also kept for the
+   GitHub CI which runs **pnpm 9**. Never delete the `package.json` `pnpm` block; never empty
+   the `packages` field.
 7. **Slug collisions handled** in `entryFilePath` via a `used` Set + `-<id-last5>` suffix.
 8. **Bikes brand select** (bikes.astro) currently hardcodes options from `BIKE_BRANDS` — see
    roadmap B7 to dedupe and derive themes. There's a known `cfdmoto` typo in one place.
@@ -564,8 +569,14 @@ pnpm exec astro dev stop|status|logs
 - **`fix/oauth-callback-resume`:** `callback.ts` now resumes `/api/auth/connect` on GitHub App
   OAuth hops that arrive without a code (post-install `setup_action=install`,
   `installation_id`, bare redirects) and on CSRF/expired-pending-session mismatches, ending
-  the "Missing authorization code" dead-end. Bounded by a `bikelog_oauth_retry` cookie
-  (3 retries). `connect.ts` clears the counter on fresh starts.
+  the "Missing authorization code" dead-end.
+- **`fix/oauth-login-pages-build`:** (1) Login fix completed — retry cap raised to 8 with a
+  diagnostics failure page (echoes raw GitHub query + expected `redirect_uri` + session/state
+  state); `connect.ts` no longer clears the retry counter (it would mask a broken GitHub App
+  config). (2) Pages build fix — `pnpm-workspace.yaml` given `packages: ["."]` +
+  `onlyBuiltDependencies` + `allowBuilds` so Cloudflare Pages (pnpm 10) stops failing with
+  "packages field missing or empty" while pnpm 9 (CI) and pnpm 12 (local) still pass.
+  Verified clean `--frozen-lockfile` installs under pnpm 9.15.9, 10.11.1, and 12.3.4.
 
 ### Next (0.1.0 cleanup)
 - [ ] **B1** — cascade-delete fuel/service/ride/mod/checklist entries when a bike is deleted
