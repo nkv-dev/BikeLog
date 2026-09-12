@@ -90,12 +90,16 @@ Note the space in the parent path — always quote paths when using shell comman
 | `30459af` | 2026-09-08 | merge: open-source release (MIT, docs, private-repo support) into main |
 | `b51f76a` | 2026-09-08 | merge: private repos now show in the data-repo picker ← **fix/private-repos-in-list** |
 | `7ece25b` | 2026-09-08 | merge: fix pull so a second device shows data pushed from another phone ← **fix/pull-bike-kind** |
+| `b0db25e` | 2026-09-12 | merge: OAuth callback resume for GitHub App no-code redirects ← **fix/oauth-callback-resume** |
+| `4dccf5a` | 2026-09-12 | merge: OAuth login fix + Cloudflare Pages build fix ← **fix/oauth-login-pages-build** |
 
 ### Branch map (local + remote)
 
 | Branch | Purpose / content | Last commit |
 |---|---|---|
-| `main` ← current (deploy target) | Integration branch | `7ece25b` |
+| `main` ← current (deploy target) | Integration branch | `4dccf5a` |
+| `fix/oauth-login-pages-build` | OAuth login resume + diagnostics; pnpm-workspace.yaml `packages` fix for Pages | `2a0c3c4` |
+| `fix/oauth-callback-resume` | Callback resumes `/api/auth/connect` on GitHub App no-code hops | `110c534` |
 | `fix/pull-bike-kind` | Pull skipped `bike.md` profiles → bikes/entries invisible on fresh device | `bfb5006` |
 | `fix/private-repos-in-list` | Private repos now appear in the picker (´ghu_` tokens) | `94003f4` |
 | `feat/open-source-mit` | Open-source release + private-repo hardening | `44a4b67` |
