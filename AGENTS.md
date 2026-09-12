@@ -287,6 +287,12 @@ AppSettings   { activeBikeId: string|null, theme: "light"|"dark"|"system", accen
   while a session exists) — users don't get logged out an hour after connecting. `/api/auth/me`
   and `/api/auth/repos` also use `getUserAccessToken()` so the 8h GitHub App token is
   auto-refreshed.
+- **OAuth bounce resilience (`callback.ts`):** GitHub App OAuth redirects to the callback
+  *without* a `code` on the post-installation hop (`setup_action=install` + `installation_id`)
+  and, depending on App settings, even as a bare redirect. `callback.ts` detects these and
+  resumes `/api/auth/connect` (fresh state) instead of erroring, bounded by a
+  `bikelog_oauth_retry` cookie (3 retries → clear error). CSRF state mismatch / expired 1h
+  pending session also resumes the flow. Success clears the retry cookie.
 - `makeEnv()` returns `env as GitHubEnv` via `cloudflare:workers`.
 
 ### `mdstore.ts` — Markdown (see §6 for exact format)
@@ -448,14 +454,14 @@ They receive `(context: any)` and return `Response` objects.
 ### `/api/auth/*`
 | Endpoint | Method | Behavior |
 |---|---|---|
-| `connect` | GET | 302 → GitHub authorize (or 503 setup-help page if App unconfigured). Sets session cookie + CSRF state. |
-| `callback` | GET | Exchanges code, validates CSRF state, fetches user, saves token+login, 302 → `/` |
+| `connect` | GET | 302 → GitHub authorize (or 503 setup-help page if App unconfigured). Sets session cookie + CSRF state. **No `scope` param** — GitHub Apps use app-configured permissions. Also clears the OAuth retry counter cookie. |
+| `callback` | GET | Exchanges code, validates CSRF state, fetches user, saves token+login, 302 → `/`. **Resumes `/api/auth/connect`** when GitHub redirects without a code (post-install `setup_action`/`installation_id` hop, bare redirects from GitHub App settings) or on CSRF/expired-session mismatch — bounded by a `bikelog_oauth_retry` cookie (3 retries, then a clear error). Only real `error=` cancellations and irrecoverable cases show the error page. Success re-issues the 90-day session cookie. |
 | `me` | GET | `{connected:false}` or `{connected:true, login, name, avatar_url, repo}` |
 | `repos` | GET | `{connected, repos[], selected}` (list of pushable non-fork repos) |
 | `select-repo` | POST | Validates `<owner>/<repo>` regex **and** push access (`listUserRepos`) before storing selection |
 | `disconnect` | POST | Clears session + token, 302 → `/settings` |
 
-`connect` scopes: `repo user`. GitHub App tokens live 8h; `me`/`repos` use the stored token.
+`connect` uses GitHub App-configured permissions (no `scope` param). GitHub App tokens live 8h; `me`/`repos` use the stored token.
 
 ### `/api/sync/*`
 | Endpoint | Method | Behavior |
@@ -555,6 +561,11 @@ pnpm exec astro dev stop|status|logs
   hardened** (`select-repo` validates push access via `listUserRepos` before saving; settings
   copy explains private repos; media was already token-authenticated). New end-user guide
   `docs/USAGE.md`.
+- **`fix/oauth-callback-resume`:** `callback.ts` now resumes `/api/auth/connect` on GitHub App
+  OAuth hops that arrive without a code (post-install `setup_action=install`,
+  `installation_id`, bare redirects) and on CSRF/expired-pending-session mismatches, ending
+  the "Missing authorization code" dead-end. Bounded by a `bikelog_oauth_retry` cookie
+  (3 retries). `connect.ts` clears the counter on fresh starts.
 
 ### Next (0.1.0 cleanup)
 - [ ] **B1** — cascade-delete fuel/service/ride/mod/checklist entries when a bike is deleted
@@ -568,8 +579,12 @@ pnpm exec astro dev stop|status|logs
 - [ ] Multi-device conflict strategy (last-write-wins is current behavior)
 
 ### Blocked / waiting on user
-- [ ] GitHub App callback URL not added → live OAuth (auto-sync) can't be verified in prod.
-  Must add `https://bikelog.nkv-dev.workers.dev/api/auth/callback` in the GitHub App dashboard.
+- [ ] GitHub App callback URL must be registered AND match exactly (no trailing slash):
+  `https://bikelog.nkv-dev.workers.dev/api/auth/callback` in the GitHub App dashboard
+  (github.com/settings/apps → BikeLog → "Identifying and authorizing users"). The app's
+  "Request user authorization (OAuth) during installation" setting affects which hops GitHub
+  sends to the callback — `callback.ts` resumes the flow on no-code redirects, so register the
+  callback URL then retry "Connect with GitHub".
 
 ### Backlog (open-source)
 - [ ] Publish a changelog/adapted `docs/TASKS.md` snapshot as release notes
