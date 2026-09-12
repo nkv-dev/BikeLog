@@ -53,11 +53,16 @@ export const GET = async (context: any) => {
   });
   const authorizeUrl = `https://github.com/login/oauth/authorize?${params.toString()}`;
 
+  // Start fresh: new pending session + clear any OAuth retry counter left behind
+  // by a bounced callback round trip.
+  const clearRetry =
+    "bikelog_oauth_retry=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
+
   return new Response(null, {
     status: 302,
     headers: {
       Location: authorizeUrl,
-      "Set-Cookie": header,
+      "Set-Cookie": [header, clearRetry],
     },
   });
 };
