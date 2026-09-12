@@ -1,3 +1,12 @@
+# Single-project workspace, cross-pnpm-version compatible:
+#  - `packages` non-empty  → required by pnpm 10/11/12 (Cloudflare Pages, CI)
+#  - `onlyBuiltDependencies` → pnpm 10/11 (and package.json pnpm block for pnpm 9)
+#  - `allowBuilds` → pnpm 12 (local dev)
+packages:
+  - "."
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
 allowBuilds:
   esbuild: true
   workerd: true
