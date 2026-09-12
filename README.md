@@ -122,3 +122,5 @@ private).
 ## License
 
 MIT — see [LICENSE](LICENSE). © 2026 BikeLog contributors.
+
+Made by [Nitesh Kumar Verma](https://nkv-dev.in) (nkv-dev).

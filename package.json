@@ -4,7 +4,10 @@
   "version": "0.1.0",
   "description": "Local-first, GitHub-of-record web app for Indian bikers to track mileage, fuel, servicing, repairs, rides, and photos.",
   "license": "MIT",
-  "author": "nkv-dev",
+  "author": {
+    "name": "Nitesh Kumar Verma",
+    "url": "https://nkv-dev.in"
+  },
   "homepage": "https://bikelog.nkv-dev.workers.dev",
   "repository": {
     "type": "git",

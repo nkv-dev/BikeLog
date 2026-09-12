@@ -1,5 +1,5 @@
 import { currentLogin, currentStoredToken, makeEnv } from "@/lib/auth";
-import { getSelectedRepo, listUserRepos } from "@/lib/github";
+import { getSelectedRepo, getUserAccessToken, listUserRepos } from "@/lib/github";
 
 export const GET = async (context: any) => {
   const env = makeEnv();
@@ -13,8 +13,10 @@ export const GET = async (context: any) => {
     });
   }
 
-  const accessToken = stored.access_token;
-  const repos = await listUserRepos(accessToken).catch(() => []);
+  // Auto-refresh the (8h-lived) GitHub App token so private + public repos list
+  // correctly long after the original OAuth exchange.
+  const token = await getUserAccessToken(env, login);
+  const repos = token ? await listUserRepos(token).catch(() => []) : [];
   const selected = await getSelectedRepo(env, login);
 
   return new Response(

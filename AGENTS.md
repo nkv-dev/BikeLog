@@ -52,7 +52,7 @@ Note the space in the parent path — always quote paths when using shell comman
 ## 2. Git Repository Map
 
 - **Remote:** `git@github.com:nkv-dev/BikeLog.git` (`origin`, SSH)
-- **Author (all commits):** `nkv-dev`
+- **Author (all commits):** `nkv-dev` — *Nitesh Kumar Verma*, nkv-dev.in
 - **Current branch:** `main`
 - **Workflow pattern:** feature/fix branches are merged into `main` via merge commits.
   Branches are used for each logical feature, then cleaned up.
@@ -281,6 +281,12 @@ AppSettings   { activeBikeId: string|null, theme: "light"|"dark"|"system", accen
 - Cookie `bikelog_session` (HttpOnly, Secure, SameSite=Lax).
 - KV sessions in `BIKE_SESSIONS` — 90-day TTL after login bind; 1h TTL for pending OAuth state.
 - `createSession` binds a CSRF `state`; callback validates `state` matches session.
+- **Login persistence:** the connect-time cookie is only 1h (pending OAuth state). On success
+  `callback.ts` re-issues the cookie with the 90-day Max-Age (`sessionCookie()`), and
+  `/api/auth/me` performs **sliding renewal** (re-issues the 90-day cookie on every request
+  while a session exists) — users don't get logged out an hour after connecting. `/api/auth/me`
+  and `/api/auth/repos` also use `getUserAccessToken()` so the 8h GitHub App token is
+  auto-refreshed.
 - `makeEnv()` returns `env as GitHubEnv` via `cloudflare:workers`.
 
 ### `mdstore.ts` — Markdown (see §6 for exact format)
