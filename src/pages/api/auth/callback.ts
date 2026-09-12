@@ -3,6 +3,7 @@ import {
   getSession,
   makeEnv,
   readSessionToken,
+  sessionCookie,
 } from "@/lib/auth";
 import { fetchUser, saveUserToken } from "@/lib/github";
 
@@ -74,5 +75,11 @@ export const GET = async (context: any) => {
   await bindLogin(env, token!, user.login);
 
   const start = new URL(env.PUBLIC_SITE_URL.replace(/\/$/, ""));
-  return new Response(null, { status: 302, headers: { Location: start.toString() } });
+  // Re-issue the cookie with the 90-day Max-Age — the connect-time cookie was
+  // only 1h (pending OAuth state) and otherwise the user would log out an hour
+  // after connecting.
+  return new Response(null, {
+    status: 302,
+    headers: { Location: start.toString(), "Set-Cookie": sessionCookie(token!) },
+  });
 };

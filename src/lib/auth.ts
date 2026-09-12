@@ -31,6 +31,11 @@ function sessionCookieHeader(token: string, maxAge: number): string {
   return `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.floor(maxAge / 1000)}`;
 }
 
+/** Re-issue the session cookie with the full 90-day TTL (sliding renewal). */
+export function sessionCookie(token: string): string {
+  return sessionCookieHeader(token, SESSION_TTL);
+}
+
 /** Create a session token and bind a temporary oauth state to it. Stores in KV. */
 export async function createSession(env: GitHubEnv, state: string): Promise<{ token: string; header: string }> {
   const token = crypto.randomUUID();
