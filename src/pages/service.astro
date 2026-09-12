@@ -91,6 +91,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     import { bikeStore, serviceStore, settingsStore } from "@/lib/store";
     import { generateId, formatINR, formatOdometer, formatDate, COMMON_SERVICE_ITEMS } from "@/lib/indian-utils";
     import { showToast, confirmDialog } from "@/lib/toast";
+    import { requireSave } from "@/lib/client-session";
 
     function getActiveBikeId(): string | null {
       return settingsStore.get().activeBikeId;
@@ -169,7 +170,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     const form = document.getElementById("service-form") as HTMLFormElement;
     let lastFocused: HTMLElement | null = null;
 
-    function openDialog() {
+    async function openDialog() {
+      if (!(await requireSave())) return;
       const bikeId = getActiveBikeId();
       if (!bikeId) {
         showToast("Please add and select a bike first.", "error");
@@ -244,7 +246,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       window.dispatchEvent(new Event("bikelog:data-changed"));
     };
 
-    (window as any).deleteService = (id: string) => {
+    (window as any).deleteService = async (id: string) => {
+      if (!(await requireSave())) return;
       confirmDialog("Delete this service entry?", () => {
         serviceStore.remove(id);
         renderEntries();
@@ -254,5 +257,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     };
 
     renderEntries();
+    window.addEventListener("bikelog:data-changed", renderEntries);
+    document.addEventListener("bikelog:data-changed", renderEntries);
   </script>
 </BaseLayout>

@@ -92,6 +92,7 @@ import { BIKE_BRANDS } from "@/lib/indian-utils";
     import { generateId } from "@/lib/indian-utils";
     import { showToast, confirmDialog } from "@/lib/toast";
     import { sync } from "@/lib/sync-client";
+    import { requireSave } from "@/lib/client-session";
     let lastFocused: HTMLElement | null = null;
 
     function renderBikes() {
@@ -180,7 +181,10 @@ import { BIKE_BRANDS } from "@/lib/indian-utils";
       }
     });
 
-    document.getElementById("add-bike-btn")!.onclick = openDialog;
+    document.getElementById("add-bike-btn")!.onclick = async () => {
+      if (!(await requireSave())) return;
+      openDialog();
+    };
     document.getElementById("close-dialog-btn")!.onclick = closeDialog;
     overlay.onclick = closeDialog;
 
@@ -221,7 +225,8 @@ import { BIKE_BRANDS } from "@/lib/indian-utils";
       document.dispatchEvent(new Event("bikelog:bikes-changed"));
     };
 
-    (window as any).editBike = (id: string) => {
+    (window as any).editBike = async (id: string) => {
+      if (!(await requireSave())) return;
       const bike = bikeStore.getById(id);
       if (!bike) return;
       titleEl.textContent = "Edit Bike";
@@ -235,7 +240,8 @@ import { BIKE_BRANDS } from "@/lib/indian-utils";
       openDialog();
     };
 
-    (window as any).deleteBike = (id: string) => {
+    (window as any).deleteBike = async (id: string) => {
+      if (!(await requireSave())) return;
       confirmDialog("Delete this bike and all its entries? This cannot be undone.", () => {
         bikeStore.remove(id);
         renderBikes();
@@ -291,6 +297,7 @@ import { BIKE_BRANDS } from "@/lib/indian-utils";
     };
 
     photoFile.addEventListener("change", async () => {
+      if (!(await requireSave())) return;
       const file = photoFile.files?.[0];
       const bikeId = (document.getElementById("photo-bike-id") as HTMLInputElement).value;
       const bike = bikeId ? bikeStore.getById(bikeId) : null;
@@ -310,5 +317,7 @@ import { BIKE_BRANDS } from "@/lib/indian-utils";
     });
 
     renderBikes();
+    window.addEventListener("bikelog:data-changed", renderBikes);
+    document.addEventListener("bikelog:data-changed", renderBikes);
   </script>
 </BaseLayout>

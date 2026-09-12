@@ -99,6 +99,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     import { bikeStore, serviceStore, settingsStore } from "@/lib/store";
     import { generateId, formatINR, formatOdometer, formatDate, SEVERITY_CONFIG, STATUS_CONFIG } from "@/lib/indian-utils";
     import { showToast, confirmDialog } from "@/lib/toast";
+    import { requireSave } from "@/lib/client-session";
 
     function getActiveBikeId(): string | null {
       return settingsStore.get().activeBikeId;
@@ -168,7 +169,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     const form = document.getElementById("issue-form") as HTMLFormElement;
     let lastFocused: HTMLElement | null = null;
 
-    function openDialog() {
+    async function openDialog() {
+      if (!(await requireSave())) return;
       if (!getActiveBikeId()) {
         showToast("Please add and select a bike first.", "error");
         window.location.href = "/bikes";
@@ -234,7 +236,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       showToast("Issue reported");
     };
 
-    (window as any).deleteIssue = (id: string) => {
+    (window as any).deleteIssue = async (id: string) => {
+      if (!(await requireSave())) return;
       confirmDialog("Delete this issue?", () => {
         serviceStore.remove(id);
         renderEntries();
@@ -243,5 +246,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     };
 
     renderEntries();
+    window.addEventListener("bikelog:data-changed", renderEntries);
+    document.addEventListener("bikelog:data-changed", renderEntries);
   </script>
 </BaseLayout>

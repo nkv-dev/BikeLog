@@ -106,6 +106,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     import { calculateMileage, calculateLastMileage, calculateTotalKm, calculateMonthlySpend } from "@/lib/mileage";
     import { generateId, formatINR, formatOdometer, formatDate } from "@/lib/indian-utils";
     import { showToast, confirmDialog } from "@/lib/toast";
+    import { requireSave } from "@/lib/client-session";
 
     function getActiveBikeId(): string | null {
       return settingsStore.get().activeBikeId;
@@ -187,7 +188,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     litresInput.addEventListener("input", calcTotal);
     priceInput.addEventListener("input", calcTotal);
 
-    function openDialog() {
+    async function openDialog() {
+      if (!(await requireSave())) return;
       if (!getActiveBikeId()) {
         showToast("Please add and select a bike first.", "error");
         window.location.href = "/bikes";
@@ -261,7 +263,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       window.dispatchEvent(new Event("bikelog:data-changed"));
     };
 
-    (window as any).deleteFuel = (id: string) => {
+    (window as any).deleteFuel = async (id: string) => {
+      if (!(await requireSave())) return;
       confirmDialog("Delete this fuel entry?", () => {
         fuelStore.remove(id);
         renderFuelEntries();
@@ -272,5 +275,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
     renderFuelEntries();
     addBtn.classList.add("hidden");
+    window.addEventListener("bikelog:data-changed", renderFuelEntries);
+    document.addEventListener("bikelog:data-changed", renderFuelEntries);
   </script>
 </BaseLayout>

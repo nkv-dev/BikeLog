@@ -7,7 +7,7 @@ Mobile-first web app for Indian bikers to track mileage, fuel, servicing, repair
 [![Built with Astro](https://img.shields.io/badge/built%20with-Astro%207-ff5d01.svg)](https://astro.build)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.12-brightgreen.svg)](package.json)
 
-**Local-first, GitHub-of-record.** Data lives in your browser's `localStorage` *and* in a GitHub repo you own, as readable Markdown under `bikelog/`. The server holds no user data — it only completes GitHub OAuth and calls the GitHub API on your behalf.
+**GitHub-of-record.** Your data lives in a GitHub repo you own, as readable Markdown under `bikelog/` — a GitHub account is required to save. The server holds no user data — it only completes GitHub OAuth and calls the GitHub API on your behalf.
 
 > 🔒 **Public or private repo — both supported.** Choose a **private** repo so your
 > mileage, costs, and bike history stay between you and GitHub. Everything (data files
@@ -51,10 +51,10 @@ Mobile-first web app for Indian bikers to track mileage, fuel, servicing, repair
 
 ## How data is stored
 
-Two layers, same data:
+One store, your GitHub repo:
 
-1. **localStorage** (`bikelog_*`) — offline cache, what the UI reads/writes.
-2. **Your GitHub repo** — `bikelog/README.md` (index) + one Markdown file per bike/entry under `bikelog/bikes/<slug>/` (bike.md, fuel/, maintenance/, rides/, modifications/, checklists/) + `media/` (photos).
+1. **Your GitHub repo** — `bikelog/README.md` (index) + one Markdown file per bike/entry under `bikelog/bikes/<slug>/` (bike.md, fuel/, maintenance/, rides/, modifications/, checklists/) + `media/` (photos).
+2. **localStorage** — UI preferences only (`bikelog_settings`, accent cache); your data is never stored on-device. Connect GitHub, choose a repo in Settings, and every entry syncs there on save.
 
 Format is strict but human-readable so you can also edit it on GitHub. See [docs/DATA.md](docs/DATA.md).
 
