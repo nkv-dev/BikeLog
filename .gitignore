@@ -36,3 +36,6 @@ cloudflare.txt
 # offline-only agent docs (untracked locally, never pushed)
 AGENTS.md
 docs/
+
+# git worktrees (parallel agents)
+.worktrees/
