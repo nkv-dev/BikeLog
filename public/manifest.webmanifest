@@ -1,0 +1,16 @@
+{
+  "name": "BikeLog",
+  "short_name": "BikeLog",
+  "description": "Mileage, service, and ride ledger for Indian bikers — data lives in your GitHub repo.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#18181b",
+  "theme_color": "#18181b",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

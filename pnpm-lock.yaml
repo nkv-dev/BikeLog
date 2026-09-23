@@ -18,8 +18,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       '@starwind-ui/astro':
-        specifier: 1.2.0
-        version: 1.2.0(astro@7.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(jiti@2.7.0)(yaml@2.9.0))
+        specifier: 1.2.1
+        version: 1.2.1(astro@7.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(jiti@2.7.0)(yaml@2.9.0))
       '@tabler/icons':
         specifier: ^3.46.0
         version: 3.46.0
@@ -1162,14 +1162,14 @@ packages:
   '@speed-highlight/core@1.2.24':
     resolution: {integrity: sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==}
 
-  '@starwind-ui/astro@1.2.0':
-    resolution: {integrity: sha512-PcNwPGa7jz4EyC6QIPduRynitRGM6xXdARiXQkpCEz6OeH1CAdH4Fv7WQCedygsSdu1N1rgfVehqK3Xc4iRNuQ==}
+  '@starwind-ui/astro@1.2.1':
+    resolution: {integrity: sha512-mdOIqcQaHhGW72f4XMoVRPEKdgg/nQkjDeWSydXkjBSAluY+LUpfaiW7QHUhVUGkA00xBzabi9Hdvir8aPRF9Q==}
     engines: {node: '>=22.12.0'}
     peerDependencies:
       astro: '>=5'
 
-  '@starwind-ui/runtime@1.2.0':
-    resolution: {integrity: sha512-9AXolYEJ9yHhacFOxJDha4+q/gxLtZ8C+f1gPEZQKigSALoIVCtmgCnO9JvslP3V5+TPsldyzJeBK6t3JHxf9A==}
+  '@starwind-ui/runtime@1.2.1':
+    resolution: {integrity: sha512-nYFQ19EiI+t9Bkha4uKy73EGKV/KDiQxJS8obwIdX+N2aYG88mgcNGIiJ88szQi5NqQMPH0JfyvLGplihvpEew==}
     engines: {node: '>=22.12.0'}
 
   '@tabler/icons@3.46.0':
@@ -3306,12 +3306,12 @@ snapshots:
 
   '@speed-highlight/core@1.2.24': {}
 
-  '@starwind-ui/astro@1.2.0(astro@7.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(jiti@2.7.0)(yaml@2.9.0))':
+  '@starwind-ui/astro@1.2.1(astro@7.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(jiti@2.7.0)(yaml@2.9.0))':
     dependencies:
-      '@starwind-ui/runtime': 1.2.0
+      '@starwind-ui/runtime': 1.2.1
       astro: 7.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(jiti@2.7.0)(yaml@2.9.0)
 
-  '@starwind-ui/runtime@1.2.0':
+  '@starwind-ui/runtime@1.2.1':
     dependencies:
       '@floating-ui/dom': 1.8.0
       embla-carousel: 8.6.0

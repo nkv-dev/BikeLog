@@ -1,5 +1,6 @@
 ---
 import { ThemeToggle } from "@/components/starwind/theme-toggle";
+import Spinner from "@/components/starwind/spinner";
 import { ThemeInitScript } from "@starwind-ui/astro/theme";
 import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/jetbrains-mono";
@@ -39,6 +40,13 @@ const icons: Record<string, string> = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#18181b" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      // Install the shell once; keeps loads instant and works offline.
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch(() => {});
+      }
+    </script>
     <script is:inline>
       document.documentElement.classList.replace("no-js", "js");
     </script>
@@ -114,12 +122,14 @@ const icons: Record<string, string> = {
           <svg xmlns="http://www.w3.org/2000/svg" id="header-push-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 5v14"/><path d="m19 12-7-7-7 7"/>
           </svg>
+          <Spinner id="header-push-spinner" class="hidden size-5" />
         </button>
         <button id="header-pull-btn" type="button" aria-label="Pull data from GitHub" title="Pull data from GitHub"
           class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-60">
           <svg xmlns="http://www.w3.org/2000/svg" id="header-pull-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>
           </svg>
+          <Spinner id="header-pull-spinner" class="hidden size-5" />
         </button>
         <a href="/settings" aria-label="Settings" class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -170,6 +180,8 @@ const icons: Record<string, string> = {
       const pullBtn = document.getElementById("header-pull-btn") as HTMLButtonElement | null;
       const pushIcon = document.getElementById("header-push-icon") as HTMLElement | null;
       const pullIcon = document.getElementById("header-pull-icon") as HTMLElement | null;
+      const pushSpinner = document.getElementById("header-push-spinner") as HTMLElement | null;
+      const pullSpinner = document.getElementById("header-pull-spinner") as HTMLElement | null;
       const guestBanner = document.getElementById("guest-banner");
       let saveEnabled = false;
       let conn = { connected: false, repo: null as string | null };
@@ -203,11 +215,10 @@ const icons: Record<string, string> = {
 
       function setPushing(on: boolean) {
         pushing = on;
-        [pushIcon, pullIcon].forEach((icon) => {
-          if (!icon) return;
-          if (on) icon.classList.add("animate-spin");
-          else icon.classList.remove("animate-spin");
-        });
+        pushIcon?.classList.toggle("hidden", on);
+        pullIcon?.classList.toggle("hidden", on);
+        pushSpinner?.classList.toggle("hidden", !on);
+        pullSpinner?.classList.toggle("hidden", !on);
         updateSyncButtons();
       }
 
@@ -254,6 +265,29 @@ const icons: Record<string, string> = {
         pushTimer = setTimeout(() => runSync(() => sync.push()), 5000);
       });
 
+      // Automatic pull: keep data fresh the moment connectivity/foreground returns,
+      // without a page reload. Throttled so focus events don't hammer the GitHub API.
+      let lastAutoPull = 0;
+      const AUTO_PULL_MIN_MS = 60_000; // ponytail: single global throttle; per-op backoff if busy
+      async function autoPull() {
+        if (!saveEnabled || pushing || document.visibilityState === "hidden") return;
+        const now = Date.now();
+        if (now - lastAutoPull < AUTO_PULL_MIN_MS) return;
+        lastAutoPull = now;
+        try {
+          await sync.pull();
+          window.dispatchEvent(new Event("bikelog:data-changed"));
+          markSynced();
+        } catch {
+          lastAutoPull = 0; // retry on the next signal instead of waiting out the throttle
+        }
+      }
+      window.addEventListener("online", autoPull);
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) autoPull();
+      });
+      window.addEventListener("focus", autoPull);
+
       // Best-effort flush so the latest edit survives tab close/hide.
       async function flushPending() {
         if (!saveEnabled || !dirty || pushing) return;
@@ -281,6 +315,7 @@ const icons: Record<string, string> = {
           saveEnabled = false;
           conn = { connected: false, repo: null };
         }
+        lastAutoPull = Date.now(); // the boot pull just ran; don't duplicate it on first focus
         updateSyncButtons();
         updateBanner();
         window.dispatchEvent(new Event("bikelog:data-changed"));
