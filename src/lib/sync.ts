@@ -103,8 +103,11 @@ export async function pullFromRepo(
     const dirFiles = files.filter((f) => !legacy.includes(f));
 
     // Legacy single-file layout first (content wins unless a new layout exists).
-    for (const legacyPath of legacy) {
-      const md = await readTextFile(env, repo, token, legacyPath).catch(() => null);
+    const legacyReads = await Promise.all(
+      legacy.map((legacyPath) => readTextFile(env, repo, token, legacyPath).catch(() => null))
+    );
+    for (let i = 0; i < legacy.length; i++) {
+      const md = legacyReads[i];
       if (!md) continue;
       const parsed = legacyMarkdownToBike(md);
       if (parsed.bike) {
@@ -119,9 +122,13 @@ export async function pullFromRepo(
 
     // New per-entry layout.
     const mdFiles = dirFiles.filter((p) => p.endsWith(".md"));
-    for (const f of mdFiles) {
-      const md = await readTextFile(env, repo, token, f).catch(() => null);
+    const mdReads = await Promise.all(
+      mdFiles.map((f) => readTextFile(env, repo, token, f).catch(() => null))
+    );
+    for (let i = 0; i < mdFiles.length; i++) {
+      const md = mdReads[i];
       if (!md) continue;
+      const f = mdFiles[i];
       const fileName = f.slice(f.lastIndexOf("/") + 1);
       // bikelog/bikes/<slug>/bike.md -> "bike" (the slug is NOT the kind!)
       const kind = fileName === "bike.md" ? "bike" : f.split("/").slice(0, -1).pop();
