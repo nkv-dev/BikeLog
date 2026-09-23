@@ -70,7 +70,7 @@ function readCache(login?: string, repo?: string): SyncDataFlat | null {
   }
 }
 
-function writeCache(login: string, repo: string, data: SyncDataFlat): void {
+function writeCache(login: string, repo: string, data: Partial<SyncDataFlat>): void {
   try {
     sessionStorage.setItem(CACHE_KEY, JSON.stringify({ login, repo, data }));
   } catch {
