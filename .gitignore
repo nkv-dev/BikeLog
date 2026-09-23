@@ -32,3 +32,7 @@ secrets/
 # cloudflare wrangler
 .wrangler/
 cloudflare.txt
+
+# offline-only agent docs (untracked locally, never pushed)
+AGENTS.md
+docs/
