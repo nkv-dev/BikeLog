@@ -54,11 +54,43 @@ async function pullRaw(): Promise<{ ok: boolean; data?: SyncDataFlat }> {
   return api<{ ok: boolean; data?: SyncDataFlat }>("/api/sync/pull");
 }
 
+const CACHE_KEY = "bikelog_cache_v1";
+
+function readCache(login?: string, repo?: string): SyncDataFlat | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { login?: string; repo?: string; data?: SyncDataFlat };
+    if (!parsed.data) return null;
+    if (login !== undefined && parsed.login !== login) return null;
+    if (repo !== undefined && parsed.repo !== repo) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(login: string, repo: string, data: SyncDataFlat): void {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ login, repo, data }));
+  } catch {
+    // Ignore quota/errors.
+  }
+}
+
 export const sync = {
+  /** Hydrate memory from the last cached pull before any async work. */
+  preload(): void {
+    const data = readCache();
+    if (data) hydrateAll(data);
+  },
+
   /** Pull data from the user's repo into memory. Throws on error. */
   async pull(): Promise<void> {
     const res = await pullRaw();
     if (!res.ok) throw new Error("Pull failed");
+    const me = await github.me();
+    writeCache(me.login!, me.repo ?? "", res.data ?? {});
     hydrateAll(res.data ?? {});
   },
 
@@ -100,6 +132,7 @@ export const sync = {
         const res = await pullRaw();
         if (res.ok && hasRepoData(res.data)) {
           hydrateAll(res.data ?? {});
+          writeCache(me.login!, repo, res.data ?? {});
           inSync = true;
         }
       } catch {
@@ -114,6 +147,9 @@ export const sync = {
         }
       }
       if (inSync) clearLegacyLocalStorage();
+    } else if (!connected) {
+      sessionStorage.removeItem(CACHE_KEY);
+      hydrateAll({});
     }
 
     return { saveEnabled, connected, repo };
