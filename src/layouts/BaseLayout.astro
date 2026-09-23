@@ -162,6 +162,9 @@ const icons: Record<string, string> = {
       import { sync } from "@/lib/sync-client";
       import { settingsStore, bikeStore, snapshotData, ACCENT_CACHE_KEY } from "@/lib/store";
 
+      // Hydrate from cache before anything async, so first paint has data.
+      sync.preload();
+
       // ---- GitHub boot, sync buttons, auto-sync, guest banner ----
       const pushBtn = document.getElementById("header-push-btn") as HTMLButtonElement | null;
       const pullBtn = document.getElementById("header-pull-btn") as HTMLButtonElement | null;
